@@ -1,0 +1,21 @@
+{
+	"servers": {
+		"github": {
+			"url": "https://api.githubcopilot.com/mcp/",
+			"type": "http"
+		},
+		"stock_price": {
+			"command": "uv",
+			"args": [
+				"run",
+				"servers/stock_price_server.py"
+			],
+			"type": "stdio"
+		},
+		"oauth_server": {
+			"url": "http://localhost:8000/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

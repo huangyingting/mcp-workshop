@@ -1,0 +1,15 @@
+[project]
+name = "mcp-workshop"
+version = "0.1.0"
+description = "MCP workshop"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Yingting Huang" }]
+keywords = ["mcp", "llm", "azure", "apim", "stdio", "http", "streamable"]
+license = { text = "MIT" }
+dependencies = [
+    "aiohttp>=3.12.15",
+    "mcp[cli]>=1.13.0",
+    "pyjwt[crypto]>=2.10.1",
+    "yfinance>=0.2.65",
+]
