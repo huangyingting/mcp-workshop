@@ -200,11 +200,14 @@ async def stock_headline_sampling(symbol: str, ctx: Context[ServerSession, None]
   Combines recent performance context with the client's model to produce one headline.
   """
   context = get_performance_summary(symbol, "1mo")
+  text = f"""Create a stock headline based on the following data
+{context}
+"""  
   result = await ctx.session.create_message(
       messages=[
           SamplingMessage(
               role="user",
-              content=TextContent(type="text", text=context),
+              content=TextContent(type="text", text=text),
           )
       ],
       max_tokens=100,
