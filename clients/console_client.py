@@ -18,7 +18,7 @@ from openai import AsyncAzureOpenAI
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("console_client")
 
 
 def _to_oa_messages(msgs: list[types.SamplingMessage]) -> list[dict]:
@@ -57,7 +57,7 @@ class MCPClient:
       preview = last["content"]
       if isinstance(preview, str) and len(preview) > 160:
         preview = preview[:160] + "…"
-      logger.debug(
+      logger.info(
         "sampling_callback: model=%s msgs=%d last_role=%s last_preview=%r",
         self.azure_deployment, len(oa_msgs), last["role"], preview
       )
@@ -143,7 +143,7 @@ class MCPClient:
         args = json.loads(tc.function.arguments or "{}")
         result = await self.session.call_tool(tc.function.name, args)
         payload = [c.model_dump() for c in result.content]
-        logger.debug("Tool %s(%s) -> %s", tc.function.name, args, payload)
+        logger.info("Tool %s(%s) -> %s", tc.function.name, args, payload)
         messages.append({
           "role": "tool",
           "tool_call_id": tc.id,

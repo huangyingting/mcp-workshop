@@ -5,106 +5,86 @@ Run from the repository root:
 
 import jwt
 import aiohttp
+import random
+import os
+import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from pydantic import AnyHttpUrl
-import random
 from mcp.server.auth.provider import AccessToken, TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-import os
-import logging
 from dotenv import load_dotenv
-load_dotenv()
 
+load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("oauth_weather_server")
 
-# Configuration - replace with your actual tenant and client IDs
+# Configuration
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
-SCOPES = os.getenv("SCOPES")
-REQUIRED_SCOPES = [f"api://{CLIENT_ID}/{SCOPE}" for SCOPE in SCOPES.split(",")]
+SCOPES = os.getenv("SCOPES", "").split(",")
+REQUIRED_SCOPES = [f"api://{CLIENT_ID}/{scope}" for scope in SCOPES]
+ISSUER = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+
 
 class EntraIdTokenVerifier(TokenVerifier):
-  """JWT token verifier for Entra ID (Azure AD)."""
+  """JWT token verifier for Entra ID."""
 
   def __init__(self, tenant_id: str, client_id: str):
     self.tenant_id = tenant_id
     self.client_id = client_id
-    self.issuer = f"https://login.microsoftonline.com/{tenant_id}/v2.0"
     self.jwks_uri = f"https://login.microsoftonline.com/{tenant_id}/discovery/v2.0/keys"
     self._jwks_cache: Optional[Dict[str, Any]] = None
     self._cache_expiry: Optional[datetime] = None
 
   async def _get_jwks(self) -> Dict[str, Any]:
-    """Fetch JWKS from Entra ID with caching."""
+    """Fetch JWKS with 1-hour caching."""
     now = datetime.now(timezone.utc)
 
-    # Return cached JWKS if still valid (cache for 1 hour)
-    if (self._jwks_cache and self._cache_expiry and
-            now < self._cache_expiry):
+    if self._jwks_cache and self._cache_expiry and now < self._cache_expiry:
       return self._jwks_cache
 
-    try:
-      async with aiohttp.ClientSession() as session:
-        async with session.get(self.jwks_uri) as response:
-          if response.status == 200:
-            jwks = await response.json()
-            self._jwks_cache = jwks
-            self._cache_expiry = now.replace(hour=now.hour + 1)
-            return jwks
-          else:
-            raise Exception(f"Failed to fetch JWKS: {response.status}")
-    except Exception as e:
-      logger.error(f"Error fetching JWKS: {e}")
-      raise
+    async with aiohttp.ClientSession() as session:
+      async with session.get(self.jwks_uri) as response:
+        if response.status != 200:
+          raise Exception(f"JWKS fetch failed: {response.status}")
 
-  def _get_signing_key(self, token_header: Dict[str, Any], jwks: Dict[str, Any]) -> str:
-    """Extract the signing key from JWKS based on token header."""
-    kid = token_header.get('kid')
-    if not kid:
-      raise jwt.InvalidTokenError("Token header missing 'kid'")
-
-    for key in jwks.get('keys', []):
-      if key.get('kid') == kid:
-        # Convert JWK to PEM format for PyJWT
-        return jwt.algorithms.RSAAlgorithm.from_jwk(key)
-
-    raise jwt.InvalidKeyError(f"Unable to find signing key with kid: {kid}")
+        self._jwks_cache = await response.json()
+        self._cache_expiry = now.replace(hour=now.hour + 1)
+        return self._jwks_cache
 
   async def verify_token(self, token: str) -> AccessToken | None:
     """Verify JWT token from Entra ID."""
     try:
-      # Decode token header to get key ID
-      token_header = jwt.get_unverified_header(token)
+      header = jwt.get_unverified_header(token)
+      kid = header.get('kid')
+      if not kid:
+        raise jwt.InvalidTokenError("Missing 'kid' in token header")
 
-      # Get JWKS
       jwks = await self._get_jwks()
 
-      # Get signing key
-      signing_key = self._get_signing_key(token_header, jwks)
+      # Find signing key
+      signing_key = None
+      for key in jwks.get('keys', []):
+        if key.get('kid') == kid:
+          signing_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+          break
 
-      # Verify and decode token
+      if not signing_key:
+        raise jwt.InvalidKeyError(f"Signing key not found: {kid}")
+
+      # Verify token
       payload = jwt.decode(
-          token,
-          signing_key,
-          algorithms=['RS256'],
-          audience=self.client_id,
-          issuer=self.issuer,
-          options={
-              "verify_signature": True,
-              "verify_exp": True,
-              "verify_aud": True,
-              "verify_iss": True,
-          }
+          token, signing_key, algorithms=['RS256'],
+          audience=self.client_id, issuer=ISSUER,
+          options={"verify_signature": True, "verify_exp": True,
+                   "verify_aud": True, "verify_iss": True}
       )
 
-      logger.debug(f"Token payload: {payload}")
-
-      # Extract scopes from token
+      # Extract scopes
       raw_scopes = payload.get('scp', '').split() or payload.get('roles', [])
       scopes = [f"api://{self.client_id}/{scope}" for scope in raw_scopes]
 
@@ -115,34 +95,19 @@ class EntraIdTokenVerifier(TokenVerifier):
           expires_at=payload.get('exp')
       )
 
-    except jwt.ExpiredSignatureError:
-      logger.error("Token has expired")
-      return None
-    except jwt.InvalidAudienceError:
-      logger.error("Token has invalid audience")
-      return None
-    except jwt.InvalidIssuerError:
-      logger.error("Token has invalid issuer")
-      return None
-    except jwt.InvalidTokenError as e:
-      logger.error(f"Invalid token: {e}")
-      return None
-    except Exception as e:
+    except (jwt.ExpiredSignatureError, jwt.InvalidAudienceError,
+            jwt.InvalidIssuerError, jwt.InvalidTokenError) as e:
       logger.error(f"Token verification failed: {e}")
       return None
 
 
-# Create FastMCP instance as a Resource Server
+# Initialize FastMCP
 mcp = FastMCP(
     "Weather Service",
-    # JWT token verifier for Entra ID authentication
     token_verifier=EntraIdTokenVerifier(TENANT_ID, CLIENT_ID),
-    # Auth settings for RFC 9728 Protected Resource Metadata
     auth=AuthSettings(
-        issuer_url=AnyHttpUrl(
-            f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"),
-        resource_server_url=AnyHttpUrl(
-            "http://localhost:8000/mcp"),
+        issuer_url=AnyHttpUrl(ISSUER),
+        resource_server_url=AnyHttpUrl("http://localhost:8000/mcp"),
         required_scopes=REQUIRED_SCOPES,
     ),
 )
@@ -151,33 +116,20 @@ mcp = FastMCP(
 @mcp.tool()
 async def get_weather(city: str = "London") -> dict[str, str]:
   """Get weather data for a city"""
-  temperatures = ["15", "18", "20", "22", "25", "28", "30", "12", "8", "5"]
-  conditions = ["Sunny", "Partly cloudy", "Cloudy",
-                "Rainy", "Stormy", "Clear", "Foggy", "Windy", "Snowy"]
-  humidity_levels = ["30%", "45%", "55%", "60%",
-                     "65%", "70%", "75%", "80%", "85%", "90%"]
-
   return {
       "city": city,
-      "temperature": random.choice(temperatures),
-      "condition": random.choice(conditions),
-      "humidity": random.choice(humidity_levels),
+      "temperature": random.choice(["15", "18", "20", "22", "25", "28", "30", "12", "8", "5"]),
+      "condition": random.choice(["Sunny", "Partly cloudy", "Cloudy", "Rainy", "Stormy", "Clear", "Foggy", "Windy", "Snowy"]),
+      "humidity": random.choice(["30%", "45%", "55%", "60%", "65%", "70%", "75%", "80%", "85%", "90%"]),
   }
 
 
-# https://github.com/modelcontextprotocol/python-sdk/issues/1264
-# https://github.com/modelcontextprotocol/python-sdk/pull/1288
 @mcp.custom_route("/mcp/.well-known/oauth-protected-resource", methods=["GET"])
 async def custom_well_known_endpoint(request: Request) -> Response:
-  """
-  Custom .well-known/oauth-protected-resource endpoint that correctly advertises the SSE endpoint
-  as the protected resource while serving the .well-known endpoint at the root.
-  """
+  """OAuth protected resource metadata endpoint."""
   return JSONResponse({
       "resource": "http://localhost:8000/mcp",
-      "authorization_servers": [
-          f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
-      ],
+      "authorization_servers": [ISSUER],
       "scopes_supported": REQUIRED_SCOPES,
       "bearer_methods_supported": ["header"]
   })
