@@ -16,9 +16,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 import random
 
-
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("stock_server")
+logger = logging.getLogger("simple_stock_server")
 
 # Mock stock data
 MOCK_STOCK_DATA = {

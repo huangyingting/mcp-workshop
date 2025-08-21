@@ -15,18 +15,18 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 import os
+import logging
 from dotenv import load_dotenv
 load_dotenv()
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("oauth_weather_server")
 
 # Configuration - replace with your actual tenant and client IDs
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 SCOPES = os.getenv("SCOPES")
 REQUIRED_SCOPES = [f"api://{CLIENT_ID}/{SCOPE}" for SCOPE in SCOPES.split(",")]
-
-print(f"Using Tenant ID: {TENANT_ID}")
-print(f"Using Client ID: {CLIENT_ID}")
-print(f"Required Scopes: {REQUIRED_SCOPES}")
 
 class EntraIdTokenVerifier(TokenVerifier):
   """JWT token verifier for Entra ID (Azure AD)."""
@@ -59,7 +59,7 @@ class EntraIdTokenVerifier(TokenVerifier):
           else:
             raise Exception(f"Failed to fetch JWKS: {response.status}")
     except Exception as e:
-      print(f"Error fetching JWKS: {e}")
+      logger.error(f"Error fetching JWKS: {e}")
       raise
 
   def _get_signing_key(self, token_header: Dict[str, Any], jwks: Dict[str, Any]) -> str:
@@ -102,7 +102,7 @@ class EntraIdTokenVerifier(TokenVerifier):
           }
       )
 
-      print(f"Token payload: {payload}")
+      logger.debug(f"Token payload: {payload}")
 
       # Extract scopes from token
       raw_scopes = payload.get('scp', '').split() or payload.get('roles', [])
@@ -116,19 +116,19 @@ class EntraIdTokenVerifier(TokenVerifier):
       )
 
     except jwt.ExpiredSignatureError:
-      print("Token has expired")
+      logger.error("Token has expired")
       return None
     except jwt.InvalidAudienceError:
-      print("Token has invalid audience")
+      logger.error("Token has invalid audience")
       return None
     except jwt.InvalidIssuerError:
-      print("Token has invalid issuer")
+      logger.error("Token has invalid issuer")
       return None
     except jwt.InvalidTokenError as e:
-      print(f"Invalid token: {e}")
+      logger.error(f"Invalid token: {e}")
       return None
     except Exception as e:
-      print(f"Token verification failed: {e}")
+      logger.error(f"Token verification failed: {e}")
       return None
 
 

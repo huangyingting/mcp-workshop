@@ -4,15 +4,15 @@
 			"url": "https://api.githubcopilot.com/mcp/",
 			"type": "http"
 		},
-		"stock_price": {
+		"simple_stock_server": {
 			"command": "uv",
 			"args": [
 				"run",
-				"servers/stock_price_server.py"
+				"servers/simple_stock_server.py"
 			],
 			"type": "stdio"
 		},
-		"oauth_server": {
+		"oauth_weather_server": {
 			"url": "http://localhost:8000/mcp",
 			"type": "http"
 		}
