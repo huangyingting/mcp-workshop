@@ -5,11 +5,12 @@
 2. [Core MCP Concepts](#core-mcp-concepts)
 3. [Workshop Setup](#workshop-setup)
 4. [Console Client](#console-client)
-5. [Demo 1: Basic Stock Server](#demo-1-basic-stock-server)
-6. [Demo 2: OAuth-Protected Weather Server](#demo-2-oauth-protected-weather-server)
-7. [Hands-on Exercises](#hands-on-exercises)
-8. [Advanced Topics](#advanced-topics)
-9. [Resources](#resources)
+5. [EntraID Client](#entraid-client)
+6. [Demo 1: Basic Stock Server](#demo-1-basic-stock-server)
+7. [Demo 2: OAuth-Protected Weather Server](#demo-2-oauth-protected-weather-server)
+8. [Hands-on Exercises](#hands-on-exercises)
+9. [Advanced Topics](#advanced-topics)
+10. [Resources](#resources)
 
 ## Introduction to MCP
 
@@ -89,7 +90,7 @@ uv sync
 ```
 
 ### Azure OpenAI Configuration
-Create a `.env` file in the `clients` directory for Azure OpenAI integration:
+Create a `.env` file in the `clients` directory for Azure OpenAI integration (used by clients/console_client.py):
 
 ```bash
 # Azure OpenAI Configuration (required for console client)
@@ -100,7 +101,7 @@ AZURE_OPENAI_DEPLOYMENT=your-deployment-name
 ```
 
 ### OAuth Configuration
-Create a `.env` file in the `servers` directory for authorization:
+Create a `.env` file in the `servers` diretory for authorization (used by servers/entraid_weather_server.py and clients/entraid_client.py):
 ```bash
 # OAuth Configuration (for weather server demo)
 TENANT_ID=your-azure-tenant-id
@@ -202,7 +203,7 @@ The client supports all MCP transport protocols:
 #### With stdio Transport (Local Servers)
 ```bash
 # Connect to the stock server
-uv run clients/console_client.py servers/stock_server.py
+uv run clients/console_client.py servers/simple_stock_server.py
 
 # Connect to the weather server
 uv run clients/entraid_client.py servers/entraid_weather_server.py
@@ -220,7 +221,7 @@ uv run clients/console_client.py http://localhost:8000/sse
 ### Example Usage Session
 
 ```
-$ uv run clients/console_client.py servers/stock_server.py
+$ uv run clients/console_client.py servers/simple_stock_server.py
 MCP Client Started! Type your queries or `quit` to exit.
 
 Query: What's the current price of Apple stock?
@@ -254,10 +255,100 @@ async def sampling_callback(self, context, params):
 3. Tool results are sent back to Azure OpenAI
 4. Final response is presented to the user
 
-#### Error Handling
-- Graceful handling of connection failures
-- Tool execution error recovery
-- Azure OpenAI API error handling
+## EntraID Client
+The workshop also includes an EntraID client (`clients/entraid_client.py`) that demonstrates how to implement OAuth 2.0 authentication with Entra ID.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client as "MCP Client"
+    participant MCPServer as "MCP Server"
+    participant EntraID as "Microsoft Entra ID"
+
+    User->>+Client: Run script
+
+    Note over Client: Creates EntraIDDeviceCodeAuth instance
+    Client->>MCPServer: Initial API Request (no auth token)
+    MCPServer-->>Client: 401 Unauthorized with WWW-Authenticate header
+
+    Client->>Client: Discover protected resource metadata URL from header
+    alt Metadata URL not in header
+        Client->>MCPServer: GET /.well-known/oauth-protected-resource
+        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+    else Metadata URL present
+        Client->>MCPServer: GET metadata from URL
+        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+    end
+
+    Note over Client: Initializes MSAL PublicClientApplication
+    Client->>EntraID: Initiate Device Code Flow
+    EntraID-->>Client: Device Code & User Verification URL
+
+    Client->>User: Display verification URL and code
+    User->>EntraID: Authenticates in browser
+    
+    Client->>EntraID: Poll for token with device code
+    EntraID-->>Client: Access Token
+
+    Note over Client: Store token and prepare authed request
+    Client->>MCPServer: Retry API Request with Bearer Token
+    MCPServer-->>Client: 200 OK
+
+    Note over Client: Establish MCP Session
+    Client->>MCPServer: MCP Handshake (Initialize)
+    MCPServer-->>Client: MCP Handshake (Ack)
+
+    Client->>MCPServer: list_tools()
+    MCPServer-->>Client: Tools list
+
+    Client->>MCPServer: list_resources()
+    MCPServer-->>Client: Resources list
+
+    Client->>-User: Print available tools and resources
+```
+
+### What it does
+- Implements httpx.Auth to handle OAuth for MCP over Streamable HTTP.
+- Discovers OAuth metadata (RFC 9728) from WWW-Authenticate or falls back to `/.well-known/oauth-protected-resource`.
+- Parses ProtectedResourceMetadata to auto-configure scopes and authorization server.
+- Uses MSAL device code flow with silent token acquisition and in-memory cache.
+- Retries the original request after obtaining a token and then lists tools and resources.
+
+### Prerequisites
+- Server running at http://localhost:8000/mcp (entraid_weather_server.py).
+- Environment variable for the client app registration:
+  - CLIENT_ID=your-azure-app-client-id
+
+Example .env (in `clients` directory):
+```
+CLIENT_ID=00000000-0000-0000-0000-000000000000
+```
+
+### How it works (flow)
+1. Send request without a token; receive 401.
+2. Discover protected resource metadata:
+   - Prefer resource_metadata from WWW-Authenticate.
+   - Fallback to `/.well-known/oauth-protected-resource` at the server origin.
+3. Parse scopes and authorization_servers from metadata.
+4. Initialize MSAL PublicClientApplication with discovered authority.
+5. Try silent token; if absent/expired, start device code flow (prints a code and URL).
+6. Apply Bearer token and retry the original MCP request.
+
+### Run
+```bash
+# Terminal 1: start the OAuth-protected server
+uv run servers/entraid_weather_server.py
+
+# Terminal 2: run the Entra ID client
+uv run clients/entraid_client.py
+```
+
+### Sample output
+```
+To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code ABCD-EFGH to authenticate.
+Available tools: ['get_weather']
+Available resources: []
+```
 
 ## Demo 1: Basic Stock Server
 
@@ -375,24 +466,22 @@ The `stock_analysis_prompt` demonstrates how to create structured prompts for AI
 - **Mock Data Generation**: Realistic stock data simulation
 
 ### Running the Stock Server
-
 ```bash
 # Run with stdio transport (for console client)
-uv run servers/stock_server.py
+uv run servers/simple_stock_server.py
 
 # Run with HTTP transport (for web clients)
-uv run servers/stock_server.py -t streamable-http
+uv run servers/simple_stock_server.py -t streamable-http
 
 # Development mode with auto-reload
-uv run mcp dev servers/stock_server.py
+uv run mcp dev servers/simple_stock_server.py
 ```
 
 ### Testing the Stock Server
-
 #### Using the Console Client
 ```bash
 # Start the console client with the stock server
-uv run clients/console_client.py servers/stock_server.py
+uv run clients/console_client.py servers/simple_stock_server.py
 
 # Try these example queries:
 # - "What's the price of Tesla stock?"
@@ -403,7 +492,7 @@ uv run clients/console_client.py servers/stock_server.py
 
 #### Direct Testing
 ```bash
-uv run mcp dev servers/stock_server.py
+uv run mcp dev servers/simple_stock_server.py
 ```
 1. **Resource Access**: Try accessing `stock://AAPL` or `stock://tickers`
 2. **Tool Calls**: Use `get_stock_price("AAPL")` or `compare_stock_prices("AAPL", "MSFT")`
@@ -519,7 +608,6 @@ async def custom_well_known_endpoint(request: Request) -> Response:
    - Note the Tenant ID and Client ID
 
 ### Running the Server with Authorization Support
-
 ```bash
 # Ensure .env file is configured with Azure settings
 uv run servers/entraid_weather_server.py
@@ -529,6 +617,15 @@ The server will:
 - Start on `http://localhost:8000/mcp`
 - Serve the `.well-known/oauth-protected-resource` endpoint
 - Require valid JWT tokens for weather data access
+
+#### Testing with CLI (Device Code)
+```bash
+# Start the OAuth-protected server in one terminal
+uv run servers/entraid_weather_server.py
+
+# In another terminal, authenticate and connect using the Entra ID client
+uv run clients/entraid_client.py
+```
 
 #### Testing with VSCode
 1. Open `.vscode/mcp.json` and click `Start` above the `entraid_weather_server` entry to connect to the MCP server
