@@ -1,6 +1,6 @@
 """
 Run from the repository root:
-    uv run servers/oauth_weather_server.py
+    uv run servers/entraid_weather_server.py
 """
 
 import jwt
@@ -20,14 +20,14 @@ from dotenv import load_dotenv
 
 load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("oauth_weather_server")
+logger = logging.getLogger("entraid_weather_server")
 
 # Configuration
 TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID")
 SCOPES = os.getenv("SCOPES", "").split(",")
 REQUIRED_SCOPES = [f"api://{CLIENT_ID}/{scope}" for scope in SCOPES]
-ISSUER = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+ISSUER_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
 
 
 class EntraIdTokenVerifier(TokenVerifier):
@@ -58,6 +58,7 @@ class EntraIdTokenVerifier(TokenVerifier):
 
   async def verify_token(self, token: str) -> AccessToken | None:
     """Verify JWT token from Entra ID."""
+    logger.debug(f"Verifying token: {token}")
     try:
       header = jwt.get_unverified_header(token)
       kid = header.get('kid')
@@ -79,7 +80,7 @@ class EntraIdTokenVerifier(TokenVerifier):
       # Verify token
       payload = jwt.decode(
           token, signing_key, algorithms=['RS256'],
-          audience=self.client_id, issuer=ISSUER,
+          audience=self.client_id, issuer=ISSUER_URL,
           options={"verify_signature": True, "verify_exp": True,
                    "verify_aud": True, "verify_iss": True}
       )
@@ -106,7 +107,7 @@ mcp = FastMCP(
     "Weather Service",
     token_verifier=EntraIdTokenVerifier(TENANT_ID, CLIENT_ID),
     auth=AuthSettings(
-        issuer_url=AnyHttpUrl(ISSUER),
+        issuer_url=AnyHttpUrl(ISSUER_URL),
         resource_server_url=AnyHttpUrl("http://localhost:8000/mcp"),
         required_scopes=REQUIRED_SCOPES,
     ),
@@ -129,7 +130,7 @@ async def custom_well_known_endpoint(request: Request) -> Response:
   """OAuth protected resource metadata endpoint."""
   return JSONResponse({
       "resource": "http://localhost:8000/mcp",
-      "authorization_servers": [ISSUER],
+      "authorization_servers": [ISSUER_URL],
       "scopes_supported": REQUIRED_SCOPES,
       "bearer_methods_supported": ["header"]
   })

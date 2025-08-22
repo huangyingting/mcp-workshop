@@ -12,7 +12,7 @@
 			],
 			"type": "stdio"
 		},
-		"oauth_weather_server": {
+		"entraid_weather_server": {
 			"url": "http://localhost:8000/mcp",
 			"type": "http"
 		}

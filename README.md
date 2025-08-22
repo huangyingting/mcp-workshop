@@ -205,7 +205,7 @@ The client supports all MCP transport protocols:
 uv run clients/console_client.py servers/stock_server.py
 
 # Connect to the weather server
-uv run clients/console_client.py servers/oauth_weather_server.py
+uv run clients/entraid_client.py servers/entraid_weather_server.py
 ```
 
 #### With HTTP Transport
@@ -503,7 +503,7 @@ async def custom_well_known_endpoint(request: Request) -> Response:
     # Returns metadata about the protected resource
 ```
 
-### Setting Up OAuth
+### Setting Up Authorization
 
 1. **Environment Configuration**:
    Create a `.env` file:
@@ -518,11 +518,11 @@ async def custom_well_known_endpoint(request: Request) -> Response:
    - Configure API permissions and scopes
    - Note the Tenant ID and Client ID
 
-### Running the OAuth Server
+### Running the Server with Authorization Support
 
 ```bash
 # Ensure .env file is configured with Azure settings
-uv run servers/oauth_weather_server.py
+uv run servers/entraid_weather_server.py
 ```
 
 The server will:
@@ -531,9 +531,9 @@ The server will:
 - Require valid JWT tokens for weather data access
 
 #### Testing with VSCode
-1. Open `.vscode/mcp.json` and click `Start` above the `oauth_weather_server` entry to connect to the MCP server
+1. Open `.vscode/mcp.json` and click `Start` above the `entraid_weather_server` entry to connect to the MCP server
 2. VSCode will automatically handle OAuth token acquisition and authentication
-3. In Copilot Chat, switch to `Agent` mode and select `MCP Server: oauth_weather_server`
+3. In Copilot Chat, switch to `Agent` mode and select `MCP Server: entraid_weather_server`
 4. Interact with the server using natural language queries, such as "What is the weather like in Seattle?"
 
 ## Hands-on Exercises
