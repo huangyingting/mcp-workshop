@@ -671,9 +671,54 @@ Refer to [Expose REST API in API Management as an MCP server](https://learn.micr
 
 #### 2. APIM as Auth Gateway for MCP Servers
 In this pattern, APIM acts as an authorization server (AS), implementing dynamic client registration while delegating the underlying authentication and authorization to Microsoft Entra ID.
-![Auth-Gateway](https://techcommunity.microsoft.com/t5/s/gxcuf89792/images/bS00NDAyNjkwLVVubmRmbQ?image-dimensions=999x427&revision=12)
-[Azure API Management Your Auth Gateway For MCP Servers
-](https://techcommunity.microsoft.com/blog/integrationsonazureblog/azure-api-management-your-auth-gateway-for-mcp-servers/4402690)
+```mermaid
+graph TD
+    %% MCP Clients
+    subgraph MCPClients["MCP Clients"]
+        VSCode["VS Code & Copilot"]
+        Inspector["MCP Inspector"]
+    end
+
+    %% AI Gateway
+    subgraph Gateway["AI Gateway"]
+        subgraph APIM["Azure API Management<br/>Remote MCP Proxy"]
+            SSE["🛡️ MCP Endpoint /sse"]
+            MSG["🛡️ MCP Endpoint /message"]
+            OAuth["🛡️ OAuth"]
+        end
+    end
+
+    %% MCP Server
+    subgraph MCPServer["MCP Server"]
+        subgraph AzFunc["Azure Function"]
+            Tool1["🔧 MCP Tool"]
+            Tool2["🔧 MCP Tool"]
+            Tool3["🔧 MCP Tool"]
+        end
+    end
+
+    %% Microsoft Entra ID
+    EntraID["Microsoft Entra ID<br/>💎"]
+
+    %% Connections
+    MCPClients <-->|MCP Protocol| APIM
+    APIM <-->|🛡️ Secured Connection| AzFunc
+    Gateway <--> EntraID
+    MCPClients -.->|🔐 Login / Consent| EntraID
+
+    %% Styling
+    classDef clientBox fill:#f9f5e6,stroke:#8b4513,stroke-width:2px
+    classDef gatewayBox fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    classDef serverBox fill:#e6f7ff,stroke:#0099cc,stroke-width:2px
+    classDef authBox fill:#fff2e6,stroke:#ff6600,stroke-width:2px
+    classDef toolBox fill:#f0f8ff,stroke:#4682b4,stroke-width:1px
+
+    class MCPClients clientBox
+    class Gateway,APIM gatewayBox
+    class MCPServer,AzFunc serverBox
+    class EntraID authBox
+    class Tool1,Tool2,Tool3 toolBox
+```
 
 #### 3. MCP Servers authorization with Protected Resource Metadata (PRM) 
 The latest draft version of MCP Authorization specification with Protected Resource Metadata (PRM), which simplifies the authorization implementation a lot.
