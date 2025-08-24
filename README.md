@@ -8,10 +8,11 @@
 5. [EntraID Client](#entraid-client)
 6. [Demo 1: Basic Stock Server](#demo-1-basic-stock-server)
 7. [Demo 2: OAuth-Protected Weather Server](#demo-2-oauth-protected-weather-server)
-8. [Hands-on Exercises](#hands-on-exercises)
-9. [Key Takeaways](#key-takeaways)
-10. [Resources](#resources)
-11. [Next Steps](#next-steps)
+8. [Demo 3: Secure Access to MCP Servers in Azure APIM](#demo-3-secure-access-to-mcp-servers-in-azure-apim)
+9. [Hands-on Exercises](#hands-on-exercises)
+10. [Key Takeaways](#key-takeaways)
+11. [Resources](#resources)
+12. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -662,7 +663,7 @@ uv run clients/entraid_client.py
 3. Ask the agent questions like, "What is the weather like in Seattle?"
 
 
-### Demo 3: Secure Access to MCP Servers in Azure APIM
+## Demo 3: Secure Access to MCP Servers in Azure APIM
 While MCP servers can directly implement authorization as shown in Demo 2, this approach demands in-depth knowledge of the MCP specification and OAuth 2.1 protocols. For a more streamlined and resilient production solution, we recommend using Azure API Management (APIM) as a secure gateway. APIM simplifies securing MCP servers by handling complex authorization logic, enforcing governance through configurable policies, and enabling you to expose existing REST APIs or MCP endpoints as new MCP servers. For more information, see [Secure access to MCP servers in API Management](https://learn.microsoft.com/en-us/azure/api-management/secure-mcp-servers).
 
 #### 1. Expose REST API in API Management as an MCP server
