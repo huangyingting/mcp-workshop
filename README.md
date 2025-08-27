@@ -9,10 +9,11 @@
 6. [Demo 1: Basic Stock Server](#demo-1-basic-stock-server)
 7. [Demo 2: OAuth-Protected Weather Server](#demo-2-oauth-protected-weather-server)
 8. [Demo 3: Secure Access to MCP Servers in Azure APIM](#demo-3-secure-access-to-mcp-servers-in-azure-apim)
-9. [Hands-on Exercises](#hands-on-exercises)
-10. [Key Takeaways](#key-takeaways)
-11. [Resources](#resources)
-12. [Next Steps](#next-steps)
+9. [Demo 4: MCP with Azure AI Foundry](#demo-4-mcp-with-azure-ai-foundry)
+10. [Hands-on Exercises](#hands-on-exercises)
+11. [Key Takeaways](#key-takeaways)
+12. [Resources](#resources)
+13. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
