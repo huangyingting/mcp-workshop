@@ -3,7 +3,7 @@ name = "mcp-workshop"
 version = "0.1.0"
 description = "MCP workshop"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 authors = [{ name = "Yingting Huang" }]
 keywords = ["mcp", "llm", "azure", "apim", "stdio", "http", "streamable"]
 license = { text = "MIT" }
@@ -16,4 +16,7 @@ dependencies = [
     "pyjwt[crypto]>=2.10.1",
     "requests>=2.32.5",
     "yfinance>=0.2.65",
+    "azure-ai-projects==1.1.0b3",
+    "azure-identity>=1.24.0",
+    "azure-ai-agents==1.2.0b3",
 ]
