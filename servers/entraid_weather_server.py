@@ -1,6 +1,6 @@
 """
 Run from the repository root:
-    uv run entraid_weather_server.py
+    uv run servers/entraid_weather_server.py
 """
 
 import jwt

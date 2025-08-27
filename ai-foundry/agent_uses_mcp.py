@@ -1,5 +1,7 @@
-# uv run ai-foundry/agent_uses_mcp.py
-# uv run ../servers/stock_server.py -t streamable-http
+"""
+Run from the repository root:
+    uv run ai-foundry/agent_uses_mcp.py
+"""
 
 import os
 import time

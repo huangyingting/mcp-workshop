@@ -728,6 +728,66 @@ An example of using APIM with PRM to protect MCP servers can be found at:
 
 By leveraging APIM, you can centralize security, reduce boilerplate code in your MCP servers, and adopt a more robust, scalable architecture for enterprise environments.
 
+## Demo 4: MCP with Azure AI Foundry
+
+### Use MCP Tools in Azure AI Foundry Agent
+In this demo, we will show how to use MCP tools within an Azure AI Foundry agent. This allows the agent to leverage external data and services seamlessly.
+
+```bash
+# Run the ai foundry agent in terminal
+$ uv run ai-foundry/agent_uses_mcp.py
+
+Created agent, ID: asst_5VBk72Rx8N12BJM2YLStOYpc
+MCP Server: microsoft_docs at https://learn.microsoft.com/api/mcp
+Created thread, ID: thread_dj3meOJ0oa6OlcvOLR3DwYka
+Created message, ID: msg_8pMY1dsoXXXAw3VyrzJeoxc6
+Created run, ID: run_d7FGCdBLks1dGSnBI1xFjZvL
+Current run status: RunStatus.IN_PROGRESS
+Approving tool call: {'id': 'call_3EB0mS6J0UN8Adeb9LHFUmpi', 'type': 'mcp', 'arguments': '{"query":"Azure CLI commands to create Azure Container App with managed identity","question":"Azure CLI commands to create Azure Container App with managed identity"}', 'name': 'microsoft_docs_search', 'server_label': 'microsoft_docs'}
+tool_approvals: [{'tool_call_id': 'call_3EB0mS6J0UN8Adeb9LHFUmpi', 'approve': True, 'headers': {}}]
+Current run status: RunStatus.REQUIRES_ACTION
+Current run status: RunStatus.IN_PROGRESS
+Approving tool call: {'id': 'call_FD3JPUAsEhhHTXPlMVimQn35', 'type': 'mcp', 'arguments': '{"url":"https://learn.microsoft.com/en-us/azure/container-apps/managed-identity#configure-managed-identities"}', 'name': 'microsoft_docs_fetch', 'server_label': 'microsoft_docs'}
+tool_approvals: [{'tool_call_id': 'call_FD3JPUAsEhhHTXPlMVimQn35', 'approve': True, 'headers': {}}]
+Current run status: RunStatus.REQUIRES_ACTION
+Current run status: RunStatus.IN_PROGRESS
+Current run status: RunStatus.IN_PROGRESS
+Current run status: RunStatus.IN_PROGRESS
+Current run status: RunStatus.IN_PROGRESS
+Current run status: RunStatus.COMPLETED
+Run completed with status: RunStatus.COMPLETED
+Step step_HQvC4YL1cg4ebZCJoBNU5ToW status: completed
+
+Step step_EJBaxdu49XyJQrwajyZJEnqp status: completed
+  MCP Tool calls:
+    Tool Call ID: call_FD3JPUAsEhhHTXPlMVimQn35
+    Type: mcp
+
+Step step_FnSTk0ivQlz0da5NwAhauVay status: completed
+  MCP Tool calls:
+    Tool Call ID: call_3EB0mS6J0UN8Adeb9LHFUmpi
+    Type: mcp
+
+
+Conversation:
+--------------------------------------------------
+USER: Give me the Azure CLI commands to create an Azure Container App with a managed identity. search Microsoft docs
+--------------------------------------------------
+ASSISTANT: To create an Azure Container App with a managed identity using Azure CLI, you first create the container app and then assign the managed identity. There are two types of managed identities you can assign: system-assigned and user-assigned.
+
+...
+--------------------------------------------------
+Deleted agent
+```
+
+### Azure AI Foundry as MCP Server
+Azure AI Foundry can also act as an MCP server, exposing its capabilities through the MCP protocol. This enables MCP clients to interact with Foundry's features in a standardized way.
+
+1. Launch the `mcp_foundry_server` from `.vscode/mcp.json` by clicking the `Start` link. 
+2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: mcp_foundry_server` tool.
+3. Ask the agent questions like, "What models can I use from Azure AI Foundry?" or "Show me the model card for Phi-4-reasoning."
+
+For more information, see the [MCP Server that interacts with Azure AI Foundry (experimental)](https://github.com/azure-ai-foundry/mcp-foundry)
 
 ## Hands-on Exercises
 

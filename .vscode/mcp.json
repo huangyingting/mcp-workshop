@@ -15,7 +15,19 @@
 		"entraid_weather_server": {
 			"url": "http://localhost:8000/mcp",
 			"type": "http"
-		}
+		},
+        "mcp_foundry_server": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": [
+                "--prerelease=allow",
+                "--from",
+                "git+https://github.com/azure-ai-foundry/mcp-foundry.git",
+                "run-azure-ai-foundry-mcp",
+                "--envFile",
+                "${workspaceFolder}/.env"
+            ]
+        }		
 	},
 	"inputs": []
 }

@@ -1,8 +1,8 @@
 """
 Run from the repository root:
-    uv run mcp run simple_stock_server.py -t streamable-http, or
-    uv run mcp dev simple_stock_server.py, or
-    uv run simple_stock_server.py -t streamable-http
+    uv run mcp run servers/simple_stock_server.py -t streamable-http, or
+    uv run mcp dev servers/simple_stock_server.py, or
+    uv run servers/simple_stock_server.py -t streamable-http
 """
 
 from mcp.server.fastmcp import FastMCP, Context
