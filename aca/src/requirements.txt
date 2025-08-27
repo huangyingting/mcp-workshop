@@ -1,0 +1,3 @@
+mcp[cli]
+newsapi-python
+python-dotenv>=1.0.0

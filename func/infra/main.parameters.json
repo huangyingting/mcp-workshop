@@ -11,6 +11,9 @@
     "principalId": {
       "value": "${AZURE_PRINCIPAL_ID}"
     },
+    "newsApiKey": {
+      "value": "${NEWS_API_KEY}"
+    },
     "vnetEnabled": {
       "value": "${VNET_ENABLED}"
     }
