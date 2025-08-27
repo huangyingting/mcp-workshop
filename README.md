@@ -790,6 +790,49 @@ Azure AI Foundry can also act as an MCP server, exposing its capabilities throug
 
 For more information, see the [MCP Server that interacts with Azure AI Foundry (experimental)](https://github.com/azure-ai-foundry/mcp-foundry)
 
+## Demo 5: MCP Bindings for Azure Functions
+Azure Functions MCP extension allows you to use Azure Functions to create remote MCP servers. These servers can host MCP tool trigger functions, which MCP clients, such as language models and agents, can query and access to do specific tasks.
+
+The repo contains a sample Azure Functions project with a math evaluation MCP tool. To run the sample project, follow these steps:
+
+### 1. Prerequisites
+- Azure account with permission to create resources
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) installed
+- Python 3.10+ and [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) installed
+- [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed
+- (Optional) VS Code with Azure Functions extension
+
+### 2. Test Using VS Code
+```bash
+cd mcp-workshop/func
+pip install -r requirements.txt
+func start
+```
+This will start the Azure Functions MCP server locally. You can test the math evaluation server by using VS Code.
+
+1. Launch the `local_matheval_server` from `.vscode/mcp.json` by clicking the `Start` link. 
+2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: local_matheval_server` tool.
+3. Ask the agent questions like, "101 + 202 = ?"
+
+### 3. Deploy to Azure
+```bash
+cd mcp-workshop/func
+azd up
+```
+
+#### 4. Validate Deployment
+1. Launch the `remote_matheval_server` from `.vscode/mcp.json` by clicking the `Start` link. VS Code will prompt you for two inputs: 
+   - `functionapp-name`: the name of your deployed Function App.
+   - `functions-mcp-extension-system-key`: the system key for the MCP extension, which you can find in the Azure Portal under your Function App > Functions > App keys > System keys > mcp_extension.
+2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: remote_matheval_server` tool.
+3. Ask the agent questions like, "101 + 202 = ?"
+
+#### 5. Clean Up (Optional)
+To avoid charges, remove resources when done:
+```bash
+azd down
+```
+
 ## Hands-on Exercises
 
 ### Exercise 1: Extend the Stock Server

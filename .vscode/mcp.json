@@ -1,21 +1,34 @@
 {
-	"servers": {
-		"github": {
-			"url": "https://api.githubcopilot.com/mcp/",
-			"type": "http"
-		},
-		"simple_stock_server": {
-			"command": "uv",
-			"args": [
-				"run",
-				"servers/simple_stock_server.py"
-			],
-			"type": "stdio"
-		},
-		"entraid_weather_server": {
-			"url": "http://localhost:8000/mcp",
-			"type": "http"
-		},
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "functions-mcp-extension-system-key",
+            "description": "Azure Functions MCP Extension System Key",
+            "password": true
+        },
+        {
+            "type": "promptString",
+            "id": "functionapp-name",
+            "description": "Azure Functions App Name"
+        }
+    ],
+    "servers": {
+        "github": {
+            "url": "https://api.githubcopilot.com/mcp/",
+            "type": "http"
+        },
+        "simple_stock_server": {
+            "command": "uv",
+            "args": [
+                "run",
+                "servers/simple_stock_server.py"
+            ],
+            "type": "stdio"
+        },
+        "entraid_weather_server": {
+            "url": "http://localhost:8000/mcp",
+            "type": "http"
+        },
         "mcp_foundry_server": {
             "type": "stdio",
             "command": "uvx",
@@ -27,7 +40,17 @@
                 "--envFile",
                 "${workspaceFolder}/.env"
             ]
-        }		
-	},
-	"inputs": []
+        },
+        "local_matheval_server": {
+            "type": "sse",
+            "url": "http://0.0.0.0:7071/runtime/webhooks/mcp/sse"
+        },
+        "remote_matheval_server": {
+            "url": "https://${input:functionapp-name}.azurewebsites.net/runtime/webhooks/mcp/sse",
+            "type": "sse",
+            "headers": {
+                "x-functions-key": "${input:functions-mcp-extension-system-key}"
+            }
+        }
+    }
 }

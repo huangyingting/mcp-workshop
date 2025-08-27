@@ -19,4 +19,5 @@ dependencies = [
     "azure-ai-projects==1.1.0b3",
     "azure-identity>=1.24.0",
     "azure-ai-agents==1.2.0b3",
+    "azure-functions>=1.23.0",
 ]
