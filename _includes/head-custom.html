@@ -1,0 +1,19 @@
+// filepath: _includes/head-custom.html
+<!-- Mermaid (classic script) -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.mermaid) {
+      mermaid.initialize({
+        startOnLoad: true,
+        securityLevel: 'strict',  // safe default; switch to 'loose' only if needed
+        theme: 'default'
+      });
+    }
+  });
+</script>
+
+<style>
+  /* Optional: blend diagrams with your theme */
+  .mermaid { background: transparent; }
+</style>
