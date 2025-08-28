@@ -110,7 +110,7 @@ The latest MCP spec (2025-06-18) supports OAuth 2.1 for secure access to protect
 ### Installation
 ```bash
 # Clone this repository
-git clone <repository-url>
+git clone https://github.com/huangyingting/mcp-workshop
 cd mcp-workshop
 
 # Install dependencies
