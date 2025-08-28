@@ -34,7 +34,7 @@
     justify-content: center;
     gap: 10px;
     /* width: auto by default, we’ll sync widths via JS */
-    padding: 14px 18px;
+    padding: 8px 10px; /* was 14px 18px */
     border-radius: 9999px;
     background-color: var(--btn-bg);
     color: var(--btn-fg);
@@ -44,6 +44,7 @@
     z-index: 9999;
     transition: background-color .15s ease, box-shadow .15s ease, transform .08s ease;
     will-change: background-color, box-shadow, transform;
+    max-width: 56px;   /* cap width for compact buttons */
   }
   .issue-fab:hover {
     background-color: var(--btn-bg-hover); /* text color intentionally unchanged */
@@ -66,7 +67,7 @@
     display: none;
   }
   .issue-fab__icon {
-    font-size: 1.2em;
+    font-size: 1.05em; /* was 1.2em */
     line-height: 1;
   }
 
@@ -143,7 +144,8 @@
     const w2 = docsBtn.getBoundingClientRect().width;
     const max = Math.max(w1, w2);
     const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-    const target = Math.min(max, vw * 0.92); // clamp to 92vw for very small screens
+    const MAX = 56; // px cap to reduce width
+    const target = Math.min(max, MAX, vw * 0.92);
     const px = Math.ceil(target) + "px";
     bugBtn.style.width = px;
     docsBtn.style.width = px;
