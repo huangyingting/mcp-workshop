@@ -11,10 +11,11 @@
 8. [Demo 3: Secure Access to MCP Servers in Azure APIM](#demo-3-secure-access-to-mcp-servers-in-azure-apim)
 9. [Demo 4: MCP with Azure AI Foundry](#demo-4-mcp-with-azure-ai-foundry)
 10. [Demo 5: MCP Bindings for Azure Functions](#demo-5-mcp-bindings-for-azure-functions)
-11. [Hands-on Exercises](#hands-on-exercises)
-12. [Key Takeaways](#key-takeaways)
-13. [Resources](#resources)
-14. [Next Steps](#next-steps)
+11. [Demo 6: Extend Copilot Studio Agent Using MCP](#demo-6-extend-copilot-studio-agent-using-mcp)
+12. [Hands-on Exercises](#hands-on-exercises)
+13. [Key Takeaways](#key-takeaways)
+14. [Resources](#resources)
+15. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -547,7 +548,7 @@ Our second demo shows how to implement OAuth support with Azure Entra ID, demons
 
 ### Architecture
 ```mermaid
-graph TB
+graph TD
     %% External Systems
     Client[Client Application]
     EntraID[Microsoft Entra ID<br/>OAuth Provider]
@@ -834,6 +835,53 @@ To avoid charges, remove resources when done:
 azd down
 ```
 
+## Demo 6: Extend Copilot Studio Agent Using MCP
+Using Copilot Studio, you can extend your agent with:
+
+- MCP connectors (prebuilt MCP servers): Connect to Microsoft services such as Dataverse, Dynamics 365, and Fabric.
+- Custom connectors (direct MCP integration): Connect to any MCP server using custom connectors configured in Power Apps or Power Automate.
+
+Note: Copilot Studio currently supports MCP tools only.
+
+### MCP Connectors
+Connect a prebuilt MCP connector (for example, Microsoft Learn Docs MCP Server) in Copilot Studio:
+- In [Copilot Studio](https://copilotstudio.microsoft.com), go to Agents > your agent (or create one) > Tools > Add a tool > Model Context Protocol.
+- Select `Microsoft Learn Docs MCP Server`, then choose `Add to agent`.
+- Open `Test your agent` and ask a question such as: "How do I create an Azure Storage account using the Azure CLI?"
+
+### Custom Connectors
+Connect to any MCP server using custom connectors in Power Apps or Power Automate.
+
+To demonstrate a custom connector, deploy the sample Python-based news MCP server to Azure Container Apps, then create the connector in Copilot Studio:
+
+```bash
+cd mcp-workshop/aca
+azd up
+```
+
+After deployment, copy the Application URL from the Azure portal (Container Apps > your app > Overview).
+
+Then follow these steps:
+- In [Copilot Studio](https://copilotstudio.microsoft.com), go to Agents > your agent (or create one) > Tools > Add a tool > New tool.
+- Choose `Custom connector`. You'll be redirected to Power Apps > Custom connectors; select `New custom connector`.
+- Choose `Import from GitHub`.
+- Set options:
+  - Connector type: Custom
+  - Branch: dev
+  - Connector: MCP-Streamable-HTTP
+- Select Continue.
+- Set:
+  - Connector name: for example, News-MCP
+  - Description: optional
+  - Host: paste your Azure Container Apps host (for example, something.azurecontainerapps.io)
+- Select `Create connector`.
+- Close the connector.
+
+The new MCP connector will appear under Model Context Protocol when you click `Add a tool` in Copilot Studio. Add it and try a prompt such as: "Today's sports news in the United States."
+
+## Demo 7: Private and Enterprise-Ready MCP Registry
+[MCP Center](https://mcp.azure.com/)
+
 ## Hands-on Exercises
 
 ### Exercise 1: Extend the Stock Server
@@ -890,6 +938,11 @@ async def get_investment_advice(symbol: str, ctx: Context[ServerSession, None]) 
 ### Exercise 5: Secure the Stock Server with OAuth
 Enhance the stock server by adding OAuth 2.0 authentication. Use the `entraid_weather_server.py` implementation as a reference to protect tools that handle sensitive user data, such as the portfolio value tool from Exercise 1.
 
+### Exercise 6: MCP Tool Trigger for Azure Functions
+Create an MCP tool trigger using the Azure Functions MCP extension. See the [documentation](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp-trigger).
+
+### Exercise 7: Create a Custom Connector in Copilot Studio for the Azure Functions MCP Tool
+Connect the Azure Functions MCP tool from `Exercise 6` to Copilot Studio by creating a custom connector.
 
 ## Key Takeaways
 
@@ -899,17 +952,23 @@ Enhance the stock server by adding OAuth 2.0 authentication. Use the `entraid_we
 4. **Azure API Management (APIM)** offers a robust and scalable solution for securing MCP servers in production environments.
 
 ## Resources
-
 - [MCP Specification](https://spec.modelcontextprotocol.io/)
 - [Python SDK Documentation](https://github.com/modelcontextprotocol/python-sdk)
 - [FastMCP Guide](https://github.com/modelcontextprotocol/python-sdk/tree/main/src/mcp/server/fastmcp)
 - [OAuth 2.0 RFC 6749](https://tools.ietf.org/html/rfc6749)
 - [Protected Resource Metadata RFC 9728](https://tools.ietf.org/html/rfc9728)
+- [About MCP servers in Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/mcp-server-overview)
+- [Expose REST API in API Management as an MCP server](https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server)
+- [Expose and govern an existing MCP server](https://learn.microsoft.com/en-us/azure/api-management/expose-existing-mcp-server)
+- [Secure access to MCP servers in API Management](https://learn.microsoft.com/en-us/azure/api-management/secure-mcp-servers)
+- [Connect to Model Context Protocol servers (preview)](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/tools/model-context-protocol)
+- [Extend your agent with Model Context Protocol](https://learn.microsoft.com/en-us/microsoft-copilot-studio/agent-extend-action-mcp)
+- [Model Context Protocol bindings for Azure Functions overview](https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-mcp)
 
 ## Next Steps
 
 1. **Build your own MCP server** for your domain
-2. **Integrate with existing APIs** and databases
+2. **Integrate with existing APIs**
 3. **Implement authorization** for sensitive data
 4. **Deploy to production** with proper monitoring
 
