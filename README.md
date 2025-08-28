@@ -1,4 +1,6 @@
 # MCP Workshop
+[![Report bug](https://img.shields.io/badge/Report-Bug-red?logo=github)](https://github.com/huangyingting/mcp-workshop/issues/new?template=bug_report.md&labels=bug&title=%5BBug%5D%3A+)
+[![Report docs issue](https://img.shields.io/badge/Report-Docs%20issue-blue?logo=github)](https://github.com/huangyingting/mcp-workshop/issues/new?template=docs_issue.md&labels=documentation&title=%5BDocs%5D%3A+)
 
 ## Table of Contents
 1. [Introduction to MCP](#introduction-to-mcp)
@@ -91,7 +93,7 @@ The latest MCP spec (2025-06-18) supports OAuth 2.1 for secure access to protect
 
 **Key Features and Standards Supported**
 
-| Feature | Description |
+| **Feature** | **Description** |
 |--------|-------------|
 | **OAuth 2.1 Compliance** | MCP adopts the latest OAuth 2.1 draft (draft-ietf-oauth-v2-1-13) for improved security and simplicity. |
 | **Authorization Server Metadata (RFC 8414)** | MCP servers advertise their associated authorization server endpoints for discovery. |

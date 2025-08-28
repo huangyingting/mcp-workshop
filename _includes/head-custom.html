@@ -5,6 +5,69 @@
 </script>
 
 <style>
-  /* Optional: blend diagrams with your theme */
-  .mermaid { background: transparent; }
+  .issue-fab {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background: #d1242f;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 24px;
+    font: 14px/1.2 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,.2);
+    z-index: 9999;
+    display: inline-block;
+  }
+  .issue-fab:hover { background: #a51a24; }
+  .issue-fab.secondary {
+    background: #0366d6;
+    bottom: 60px;
+  }
+  .issue-fab.secondary:hover { background: #024ea8; }
 </style>
+
+<script>
+(function () {
+  var base = "https://github.com/huangyingting/mcp-workshop/issues/new";
+
+  // Code bug button
+  var bugParams = new URLSearchParams({
+    template: "bug_report.md",
+    labels: "bug",
+    title: "[Bug]: "
+  });
+  var bugBtn = document.createElement("a");
+  bugBtn.href = base + "?" + bugParams.toString();
+  bugBtn.target = "_blank";
+  bugBtn.rel = "noopener";
+  bugBtn.className = "issue-fab";
+  bugBtn.ariaLabel = "Report a code bug";
+  bugBtn.textContent = "Report bug";
+
+  // Docs issue button (include source page)
+  var docsParams = new URLSearchParams({
+    template: "docs_issue.md",
+    labels: "documentation",
+    title: "[Docs]: ",
+    body: "Source page: " + location.href + "\n\n"
+  });
+  var docsBtn = document.createElement("a");
+  docsBtn.href = base + "?" + docsParams.toString();
+  docsBtn.target = "_blank";
+  docsBtn.rel = "noopener";
+  docsBtn.className = "issue-fab secondary";
+  docsBtn.ariaLabel = "Report a documentation issue";
+  docsBtn.textContent = "Docs issue";
+
+  function add() {
+    document.body.appendChild(bugBtn);
+    document.body.appendChild(docsBtn);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", add);
+  } else {
+    add();
+  }
+})();
+</script>

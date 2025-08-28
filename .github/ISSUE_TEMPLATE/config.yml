@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question (Discussions)
+    url: https://github.com/huangyingting/mcp-workshop/discussions/new?category=q-a
+    about: Q&A and general help
