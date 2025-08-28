@@ -1,16 +1,7 @@
-// filepath: _includes/head-custom.html
-<!-- Mermaid (classic script) -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" defer></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    if (window.mermaid) {
-      mermaid.initialize({
-        startOnLoad: true,
-        securityLevel: 'strict',  // safe default; switch to 'loose' only if needed
-        theme: 'default'
-      });
-    }
-  });
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({startOnLoad:true,theme:'neutral'})
+    await mermaid.run({querySelector:'code.language-mermaid'})
 </script>
 
 <style>
