@@ -12,10 +12,11 @@
 9. [Demo 4: MCP with Azure AI Foundry](#demo-4-mcp-with-azure-ai-foundry)
 10. [Demo 5: MCP Bindings for Azure Functions](#demo-5-mcp-bindings-for-azure-functions)
 11. [Demo 6: Extend Copilot Studio Agent Using MCP](#demo-6-extend-copilot-studio-agent-using-mcp)
-12. [Hands-on Exercises](#hands-on-exercises)
-13. [Key Takeaways](#key-takeaways)
-14. [Resources](#resources)
-15. [Next Steps](#next-steps)
+12. [Demo 7: Private and Enterprise-Ready MCP Registry](#demo-7-private-and-enterprise-ready-mcp-registry)
+13. [Hands-on Exercises](#hands-on-exercises)
+14. [Key Takeaways](#key-takeaways)
+15. [Resources](#resources)
+16. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -880,7 +881,9 @@ Then follow these steps:
 The new MCP connector will appear under Model Context Protocol when you click `Add a tool` in Copilot Studio. Add it and try a prompt such as: "Today's sports news in the United States."
 
 ## Demo 7: Private and Enterprise-Ready MCP Registry
-[MCP Center](https://mcp.azure.com/)
+Using Azure API Center as a private MCP registry streamlines enterprise-wide discovery, cataloging, and governance of Model Context Protocol assets.
+
+Sample private registry: [MCP Center](https://mcp.azure.com/)
 
 ## Hands-on Exercises
 
