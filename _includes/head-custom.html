@@ -7,7 +7,6 @@
 <style>
   :root {
     /* Tunables */
-    --btn-width: 320px;                  /* make both buttons same/wider width */
     --btn-bg: #dbeafe;                   /* light blue (like screenshot) */
     --btn-bg-hover: #c7d2fe;             /* slightly darker on hover */
     --btn-fg: #0f172a;                   /* dark text, unchanged on hover */
@@ -34,7 +33,7 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    width: var(--btn-width);
+    /* width: auto by default, we’ll sync widths via JS */
     padding: 14px 18px;
     border-radius: 9999px;
     background-color: var(--btn-bg);
@@ -69,12 +68,6 @@
   .issue-fab__icon {
     font-size: 1.05em;
     line-height: 1;
-  }
-
-  /* Keep labels visible on small screens since the screenshot shows text */
-  @media (max-width: 420px) {
-    :root { --btn-width: 92vw; }
-    .issue-fab, .issue-fab--docs { inset-inline-end: 4vw; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -116,10 +109,29 @@
   docsBtn.ariaLabel = "Report a documentation issue";
   docsBtn.innerHTML = '<span class="issue-fab__label">Docs issue</span><span class="issue-fab__icon" aria-hidden="true">→</span>';
 
+  function equalizeWidths() {
+    // Let natural widths settle first
+    bugBtn.style.width = "";
+    docsBtn.style.width = "";
+    const w1 = bugBtn.getBoundingClientRect().width;
+    const w2 = docsBtn.getBoundingClientRect().width;
+    const max = Math.max(w1, w2);
+    const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+    const target = Math.min(max, vw * 0.92); // clamp to 92vw for very small screens
+    const px = Math.ceil(target) + "px";
+    bugBtn.style.width = px;
+    docsBtn.style.width = px;
+  }
+
   function add() {
     document.body.appendChild(bugBtn);
     document.body.appendChild(docsBtn);
+    // Size after paint
+    requestAnimationFrame(equalizeWidths);
+    // Recalculate on resize (e.g., viewport/font changes)
+    window.addEventListener("resize", equalizeWidths, { passive: true });
   }
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", add);
   } else {
