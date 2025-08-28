@@ -6,16 +6,23 @@
 
 <style>
   :root {
-    --fab-fg: #ffffff;
-    --fab-shadow: 0 10px 20px rgba(0,0,0,.25), 0 2px 6px rgba(0,0,0,.2);
-    --fab-shadow-hover: 0 14px 28px rgba(0,0,0,.28), 0 6px 12px rgba(0,0,0,.22);
-    --fab-border: rgba(255,255,255,.28);
+    /* Tunables */
+    --btn-width: 320px;                  /* make both buttons same/wider width */
+    --btn-bg: #dbeafe;                   /* light blue (like screenshot) */
+    --btn-bg-hover: #c7d2fe;             /* slightly darker on hover */
+    --btn-fg: #0f172a;                   /* dark text, unchanged on hover */
+    --btn-border: rgba(2, 6, 23, 0.08);  /* subtle border */
+    --btn-shadow: 0 1px 2px rgba(2,6,23,.08), 0 4px 10px rgba(2,6,23,.06);
+    --btn-shadow-hover: 0 2px 4px rgba(2,6,23,.10), 0 6px 14px rgba(2,6,23,.08);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --fab-shadow: 0 10px 22px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.35);
-      --fab-shadow-hover: 0 16px 32px rgba(0,0,0,.5), 0 8px 14px rgba(0,0,0,.4);
-      --fab-border: rgba(255,255,255,.22);
+      --btn-bg: #1f2937;        /* neutral dark surface */
+      --btn-bg-hover: #273244;  /* slight hover tint */
+      --btn-fg: #e5e7eb;        /* light text, unchanged on hover */
+      --btn-border: rgba(255,255,255,.12);
+      --btn-shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 10px rgba(0,0,0,.35);
+      --btn-shadow-hover: 0 2px 6px rgba(0,0,0,.45), 0 8px 16px rgba(0,0,0,.4);
     }
   }
 
@@ -25,62 +32,54 @@
     inset-block-end: calc(16px + env(safe-area-inset-bottom, 0));
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    color: var(--fab-fg);
+    justify-content: center;
+    gap: 10px;
+    width: var(--btn-width);
+    padding: 14px 18px;
+    border-radius: 9999px;
+    background-color: var(--btn-bg);
+    color: var(--btn-fg);
     text-decoration: none;
-    box-shadow: var(--fab-shadow);
-    background: var(--fab-bg, linear-gradient(135deg, #3b82f6, #22d3ee));
-    border: 1px solid var(--fab-border);
-    backdrop-filter: blur(8px) saturate(1.1);
-    -webkit-backdrop-filter: blur(8px) saturate(1.1);
+    border: 1px solid var(--btn-border);
+    box-shadow: var(--btn-shadow);
     z-index: 9999;
-    transition: transform .12s ease, box-shadow .12s ease, filter .2s ease, background .25s ease;
-    will-change: transform, box-shadow;
+    transition: background-color .15s ease, box-shadow .15s ease, transform .08s ease;
+    will-change: background-color, box-shadow, transform;
   }
   .issue-fab:hover {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow: var(--fab-shadow-hover);
-    filter: brightness(1.03);
+    background-color: var(--btn-bg-hover); /* text color intentionally unchanged */
+    box-shadow: var(--btn-shadow-hover);
+    transform: translateY(-1px);
   }
-  .issue-fab:active {
-    transform: translateY(0) scale(.98);
-    filter: brightness(.98);
-  }
+  .issue-fab:active { transform: translateY(0); }
   .issue-fab:focus-visible {
-    outline: 3px solid rgba(255,255,255,.6);
+    outline: 3px solid rgba(59,130,246,.35);
     outline-offset: 2px;
   }
 
-  /* Variants */
-  .issue-fab--bug { --fab-bg: linear-gradient(135deg, #ef4444, #f97316); }
-  .issue-fab--docs { --fab-bg: linear-gradient(135deg, #3b82f6, #22d3ee); }
-
-  /* Vertical stacking */
-  .issue-fab--docs { inset-block-end: calc(70px + env(safe-area-inset-bottom, 0)); }
-
-  /* Icon + label */
-  .issue-fab__icon {
-    font-size: 1.1em;
-    line-height: 1;
-    filter: drop-shadow(0 1px 0 rgba(0,0,0,.15));
+  /* Stack the second button above the first */
+  .issue-fab--docs {
+    inset-block-end: calc(74px + env(safe-area-inset-bottom, 0));
   }
+
   .issue-fab__label {
-    font: 14px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font: 15px/1.2 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     white-space: nowrap;
   }
-
-  /* Compact on small screens: icon-only */
-  @media (max-width: 480px) {
-    .issue-fab { padding: 12px; gap: 0; }
-    .issue-fab__label { display: none; }
+  .issue-fab__icon {
+    font-size: 1.05em;
+    line-height: 1;
   }
 
-  /* Respect reduced motion */
+  /* Keep labels visible on small screens since the screenshot shows text */
+  @media (max-width: 420px) {
+    :root { --btn-width: 92vw; }
+    .issue-fab, .issue-fab--docs { inset-inline-end: 4vw; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .issue-fab { transition: none; }
-    .issue-fab:hover, .issue-fab:active { transform: none; }
+    .issue-fab:hover { transform: none; }
   }
 </style>
 
@@ -98,9 +97,9 @@
   bugBtn.href = base + "?" + bugParams.toString();
   bugBtn.target = "_blank";
   bugBtn.rel = "noopener";
-  bugBtn.className = "issue-fab issue-fab--bug";
+  bugBtn.className = "issue-fab";
   bugBtn.ariaLabel = "Report a code bug";
-  bugBtn.innerHTML = '<span class="issue-fab__icon" aria-hidden="true">🐞</span><span class="issue-fab__label">Report bug</span>';
+  bugBtn.innerHTML = '<span class="issue-fab__label">Report bug</span><span class="issue-fab__icon" aria-hidden="true">→</span>';
 
   // Docs issue button (include source page)
   const docsParams = new URLSearchParams({
@@ -115,7 +114,7 @@
   docsBtn.rel = "noopener";
   docsBtn.className = "issue-fab issue-fab--docs";
   docsBtn.ariaLabel = "Report a documentation issue";
-  docsBtn.innerHTML = '<span class="issue-fab__icon" aria-hidden="true">📘</span><span class="issue-fab__label">Docs issue</span>';
+  docsBtn.innerHTML = '<span class="issue-fab__label">Docs issue</span><span class="issue-fab__icon" aria-hidden="true">→</span>';
 
   function add() {
     document.body.appendChild(bugBtn);
