@@ -10,15 +10,16 @@
 5. [EntraID Client](#entraid-client)
 6. [Demo 1: Basic Stock Server](#demo-1-basic-stock-server)
 7. [Demo 2: OAuth-Protected Weather Server](#demo-2-oauth-protected-weather-server)
-8. [Demo 3: Secure Access to MCP Servers in Azure APIM](#demo-3-secure-access-to-mcp-servers-in-azure-apim)
-9. [Demo 4: MCP with Azure AI Foundry](#demo-4-mcp-with-azure-ai-foundry)
-10. [Demo 5: MCP Bindings for Azure Functions](#demo-5-mcp-bindings-for-azure-functions)
-11. [Demo 6: Extend Copilot Studio Agent Using MCP](#demo-6-extend-copilot-studio-agent-using-mcp)
-12. [Demo 7: Private and Enterprise-Ready MCP Registry](#demo-7-private-and-enterprise-ready-mcp-registry)
-13. [Hands-on Exercises](#hands-on-exercises)
-14. [Key Takeaways](#key-takeaways)
-15. [Resources](#resources)
-16. [Next Steps](#next-steps)
+8. [Demo 3: OAuth 2.0 On-Behalf-Of MCP Server](#demo-3-oauth-2-0-on-behalf-of-mcp-server)
+9. [Demo 4: Secure Access to MCP Servers in Azure APIM](#demo-4-secure-access-to-mcp-servers-in-azure-apim)
+10. [Demo 5: MCP with Azure AI Foundry](#demo-5-mcp-with-azure-ai-foundry)
+11. [Demo 6: MCP Bindings for Azure Functions](#demo-6-mcp-bindings-for-azure-functions)
+12. [Demo 7: Extend Copilot Studio Agent Using MCP](#demo-7-extend-copilot-studio-agent-using-mcp)
+13. [Demo 8: Private and Enterprise-Ready MCP Registry](#demo-8-private-and-enterprise-ready-mcp-registry)
+14. [Hands-on Exercises](#hands-on-exercises)
+15. [Key Takeaways](#key-takeaways)
+16. [Resources](#resources)
+17. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -132,11 +133,16 @@ To enable OAuth support for MCP, two applications must be registered in Entra ID
 4. Record **Application (client) ID** from **Overview**, we will need it later in MCP client configuration.
 
 #### MCP Server Application Registration
-1. From Azure portal **Microsoft Entra ID->Manage->App Registration->New registration**, register a MCP server application.
-2. **Manage->Manifest**, modify `accessTokenAcceptedVersion` to 2.
-3. **Manage->Expose an API->Scopes defined by this API->Add a scope**, add a scope such as **api://<server_app_id>/MCP.Prompts**, repeat step 3 to add other scopes like **api://<server_app_id>/MCP.Tools** and **api://<server_app_id>/MCP.Resources**. Record those scopes, we need them later in MCP server configuration.
-4. **Manage->Expose an API->Authorized client applications**, add the MCP client application ID (from Step 4 of the MCP Client Application Registration) as an authorized client. Additionally, include aebc6443-996d-45c2-90f0-388ff96faa56, which corresponds to the Visual Studio Code application ID.
-5. Record **Application (client) ID**, **Directory (tenant) ID** from **Overview**, we will need it later in MCP server configuration.
+1. In the Azure portal, go to **Microsoft Entra ID > App registrations > New registration** and register an MCP server application.
+2. Under **Manage > Certificates & secrets > Client secrets**, create a new client secret and securely save its Value.
+3. Under **Manage > Manifest**, set `"accessTokenAcceptedVersion": 2` and save.
+4. Under **Manage > Expose an API > Scopes defined by this API**, select **Add a scope** and create these scopes (record the full URIs):
+   - `api://<server_app_id>/MCP.Prompts`
+   - `api://<server_app_id>/MCP.Tools`
+   - `api://<server_app_id>/MCP.Resources`
+5. Under **Manage > Expose an API > Authorized client applications**, add your MCP client application ID (from step 4 of the MCP Client Application Registration). Also add `aebc6443-996d-45c2-90f0-388ff96faa56` (Visual Studio Code).
+6. Under **Manage > API permissions**, ensure **Microsoft Graph > Delegated permissions > User.Read** is included, then select **Grant admin consent for <TenantName>**.
+7. From Overview, record **Application (client) ID**, **Directory (tenant) ID**, and the **client secret** you created; you’ll use them in the MCP server configuration.
 
 ### MCP Server Configuration
 Create a `.env` file in the `servers` directory for authorization (used by servers/entraid_weather_server.py):
@@ -144,6 +150,7 @@ Create a `.env` file in the `servers` directory for authorization (used by serve
 # OAuth Configuration (for weather server demo)
 TENANT_ID=your-azure-tenant-id # Tenant ID from MCP Server Application Registration
 CLIENT_ID=your-azure-app-client-id # Client ID from MCP Server Application Registration
+CLIENT_SECRET=your-azure-app-client-secret # Client Secret from MCP Server Application Registration
 SCOPES=MCP.Tools,MCP.Resources,MCP.Prompts  # Scopes from MCP Server Application Registration
 ```
 
@@ -547,7 +554,7 @@ uv run clients/console_client.py servers/simple_stock_server.py
 ```
 
 ## Demo 2: OAuth-Protected Weather Server
-Our second demo shows how to implement OAuth support with Azure Entra ID, demonstrating enterprise-grade security. This example focuses on implementing authorization directly within the MCP server itself.
+Our second demo shows how to implement OAuth support with Azure Entra ID, demonstrating enterprise-grade security. This example focuses on implementing authorization directly within the MCP server.
 
 ### Architecture
 ```mermaid
@@ -644,7 +651,7 @@ Refer to the [Entra ID Configuration](#entra-id-configuration) section for setup
 
 ### Running OAuth Weather Server
 ```bash
-# Ensure .env file is configured with Azure settings
+# Ensure .env file is configured with Entra ID settings
 uv run servers/entraid_weather_server.py
 ```
 
@@ -669,7 +676,30 @@ uv run clients/entraid_client.py
 3. Ask the agent questions like, "What is the weather like in Seattle?"
 
 
-## Demo 3: Secure Access to MCP Servers in Azure APIM
+## Demo 3: OAuth 2.0 On-Behalf-Of MCP Server
+On-behalf-of (OBO) is an OAuth 2.0 flow where a middle-tier service exchanges a user's access token for a new token to call downstream APIs on the user's behalf.
+
+The demo below shows how the MCP server accesses the user's profile using the OBO flow.
+
+### Setting Up Authorization
+Refer to the [Entra ID Configuration](#entra-id-configuration) section for setup instructions.
+
+### Running OAuth OBO Server
+```bash
+# Ensure .env file is configured with Entra ID settings
+uv run servers/entraid_obo_server.py
+```
+
+The server will start on `http://localhost:9000/mcp` and act on behalf of the user.
+
+### Demo
+
+#### Using VS Code
+1. Launch the `entraid_obo_server` from `.vscode/mcp.json` by clicking the `Start` link. VS Code will automatically handle the OAuth authentication flow.
+2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: entraid_obo_server` tool.
+3. Ask the agent questions like, "Who am I?", the agent will respond with the user's profile information.
+
+## Demo 4: Secure Access to MCP Servers in Azure APIM
 While MCP servers can directly implement authorization as shown in Demo 2, this approach demands in-depth knowledge of the MCP specification and OAuth 2.1 protocols. For a more streamlined and resilient production solution, we recommend using Azure API Management (APIM) as a secure gateway. APIM simplifies securing MCP servers by handling complex authorization logic, enforcing governance through configurable policies, and enabling you to expose existing REST APIs or MCP endpoints as new MCP servers. For more information, see [Secure access to MCP servers in API Management](https://learn.microsoft.com/en-us/azure/api-management/secure-mcp-servers).
 
 #### 1. Expose REST API in API Management as an MCP server
@@ -734,7 +764,7 @@ An example of using APIM with PRM to protect MCP servers can be found at:
 
 By leveraging APIM, you can centralize security, reduce boilerplate code in your MCP servers, and adopt a more robust, scalable architecture for enterprise environments.
 
-## Demo 4: MCP with Azure AI Foundry
+## Demo 5: MCP with Azure AI Foundry
 
 ### Use MCP Tools in Azure AI Foundry Agent
 In this demo, we will show how to use MCP tools within an Azure AI Foundry agent. This allows the agent to leverage external data and services seamlessly.
@@ -795,7 +825,7 @@ Azure AI Foundry can also act as an MCP server, exposing its capabilities throug
 
 For more information, see the [MCP Server that interacts with Azure AI Foundry (experimental)](https://github.com/azure-ai-foundry/mcp-foundry)
 
-## Demo 5: MCP Bindings for Azure Functions
+## Demo 6: MCP Bindings for Azure Functions
 Azure Functions MCP extension allows you to use Azure Functions to create remote MCP servers. These servers can host MCP tool trigger functions, which MCP clients, such as language models and agents, can query and access to do specific tasks.
 
 The repo contains a sample Azure Functions project with a math evaluation MCP tool. To run the sample project, follow these steps:
@@ -838,7 +868,7 @@ To avoid charges, remove resources when done:
 azd down
 ```
 
-## Demo 6: Extend Copilot Studio Agent Using MCP
+## Demo 7: Extend Copilot Studio Agent Using MCP
 Using Copilot Studio, you can extend your agent with:
 
 - MCP connectors (prebuilt MCP servers): Connect to Microsoft services such as Dataverse, Dynamics 365, and Fabric.
@@ -882,7 +912,7 @@ Then follow these steps:
 
 The new MCP connector will appear under Model Context Protocol when you click `Add a tool` in Copilot Studio. Add it and try a prompt such as: "Today's sports news in the United States."
 
-## Demo 7: Private and Enterprise-Ready MCP Registry
+## Demo 8: Private and Enterprise-Ready MCP Registry
 Using Azure API Center as a private MCP registry streamlines enterprise-wide discovery, cataloging, and governance of Model Context Protocol assets.
 
 Sample private registry: [MCP Center](https://mcp.azure.com/)

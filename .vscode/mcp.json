@@ -29,6 +29,10 @@
             "url": "http://localhost:8000/mcp",
             "type": "http"
         },
+        "entraid_obo_server": {
+            "url": "http://localhost:9000/mcp",
+            "type": "http"
+        },        
         "mcp_foundry_server": {
             "type": "stdio",
             "command": "uvx",
@@ -43,7 +47,7 @@
         },
         "local_matheval_server": {
             "type": "sse",
-            "url": "http://0.0.0.0:7071/runtime/webhooks/mcp/sse"
+            "url": "http://localhost:7071/runtime/webhooks/mcp/sse"
         },
         "remote_matheval_server": {
             "url": "https://${input:functionapp-name}.azurewebsites.net/runtime/webhooks/mcp/sse",
