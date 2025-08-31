@@ -16,10 +16,15 @@
 11. [Demo 6: MCP Bindings for Azure Functions](#demo-6-mcp-bindings-for-azure-functions)
 12. [Demo 7: Extend Copilot Studio Agent Using MCP](#demo-7-extend-copilot-studio-agent-using-mcp)
 13. [Demo 8: Private and Enterprise-Ready MCP Registry](#demo-8-private-and-enterprise-ready-mcp-registry)
-14. [Hands-on Exercises](#hands-on-exercises)
-15. [Key Takeaways](#key-takeaways)
-16. [Resources](#resources)
-17. [Next Steps](#next-steps)
+14. [Security Risks in MCP](#security-risks-in-mcp)
+15. [Demo 9: XPIA Attacks in MCP](#demo-9-xpia-attacks-in-mcp)
+16. [Demo 10: Remote Code Execution (RCE) in MCP](#demo-10-remote-code-execution-rce-in-mcp)
+17. [Demo 11: MCP Tool Poisoning](#demo-11-mcp-tool-poisoning)
+18. [Demo 12: MCP Tool Shadowing](#demo-12-mcp-tool-shadowing)
+19. [Hands-on Exercises](#hands-on-exercises)
+20. [Key Takeaways](#key-takeaways)
+21. [Resources](#resources)
+22. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -104,12 +109,17 @@ The latest MCP spec (2025-06-18) supports OAuth 2.1 for secure access to protect
 ## Workshop Setup
 
 ### Prerequisites
-- Python 3.11+
-- uv (Python package manager)
+- Azure account with permission to create resources
 - Azure OpenAI service (for the console client)
 - Entra ID (for authorization support)
-- VS Code (MCP client)
+- [Python 3.11+](https://www.python.org/downloads/)
+- [uv (Python package)](https://docs.astral.sh/uv/getting-started/installation/)
+- [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd)
+- [Visual Studio Code](https://code.visualstudio.com/download)
+- [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local)
+- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 
+- (Optional) VS Code with Azure Functions extension
 ### Installation
 ```bash
 # Clone this repository
@@ -830,14 +840,7 @@ Azure Functions MCP extension allows you to use Azure Functions to create remote
 
 The repo contains a sample Azure Functions project with a math evaluation MCP tool. To run the sample project, follow these steps:
 
-### 1. Prerequisites
-- Azure account with permission to create resources
-- [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) installed
-- Python 3.10+ and [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) installed
-- [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd) installed
-- (Optional) VS Code with Azure Functions extension
-
-### 2. Test Using VS Code
+### 1. Test Using VS Code
 ```bash
 cd mcp-workshop/func
 pip install -r requirements.txt
@@ -849,20 +852,20 @@ This will start the Azure Functions MCP server locally. You can test the math ev
 2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: local_matheval_server` tool.
 3. Ask the agent questions like, "101 + 202 = ?"
 
-### 3. Deploy to Azure
+### 2. Deploy to Azure
 ```bash
 cd mcp-workshop/func
 azd up
 ```
 
-#### 4. Validate Deployment
+#### 3. Validate Deployment and Test
 1. Launch the `remote_matheval_server` from `.vscode/mcp.json` by clicking the `Start` link. VS Code will prompt you for two inputs: 
    - `functionapp-name`: the name of your deployed Function App.
    - `functions-mcp-extension-system-key`: the system key for the MCP extension, which you can find in the Azure Portal under your Function App > Functions > App keys > System keys > mcp_extension.
 2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: remote_matheval_server` tool.
 3. Ask the agent questions like, "101 + 202 = ?"
 
-#### 5. Clean Up (Optional)
+#### 4. Clean Up (Optional)
 To avoid charges, remove resources when done:
 ```bash
 azd down
@@ -916,6 +919,100 @@ The new MCP connector will appear under Model Context Protocol when you click `A
 Using Azure API Center as a private MCP registry streamlines enterprise-wide discovery, cataloging, and governance of Model Context Protocol assets.
 
 Sample private registry: [MCP Center](https://mcp.azure.com/)
+
+## Security Risks in MCP
+By enabling tool invocation and data access, MCP introduces new security challenges at the intersection of LLMs and external systems. Threats span multiple components – from the prompt and model (AI logic) to the client and server (infrastructure) and the tools (external APIs). 
+
+### Application Layer Threats
+
+**Authentication Vulnerabilities**
+- Leaked OAuth tokens enable silent account takeovers
+- Weak authentication allows unauthorized access
+- No standardized authorization mechanisms
+
+**Tool Manipulation**
+- **Tool Poisoning**: Malicious tools impersonate legitimate ones
+- **Tool Shadowing**: Fake tools intercept requests to authentic services
+- **Service Spoofing**: Rogue MCP servers trick clients into connecting
+
+### AI Platform Layer Threats
+
+**Model Security**
+- Supply chain vulnerabilities in model development and distribution
+- Model tampering through training data poisoning or weight manipulation
+- Insufficient validation of deployed models
+
+### Data Layer Threats
+
+**Data Exfiltration**
+- Compromised agents affect entire user sessions due to lack of native sandboxing
+- Sensitive data embedded in model context gets exposed inappropriately
+- Weak access controls on shared resources
+
+### Infrastructure Layer Threats
+
+**System Vulnerabilities**
+- Local MCP servers without sandboxing exploit OS vulnerabilities
+- Access to environment variables and system modification capabilities
+- Improper network configurations expose infrastructure to external threats
+
+### Cross-Layer Implications
+
+**Cascading Failures**: Compromise at one layer can escalate across the entire system through trust relationships and privilege escalation chains.
+
+**Monitoring Gaps**: Traditional security tools lack visibility into MCP-specific interactions, creating detection blind spots.
+
+### Key Recommendations
+
+1. Implement defense-in-depth strategies across all layers
+2. Adopt zero-trust principles for component interactions
+3. Use only approved models with comprehensive validation
+4. Establish proper sandboxing and isolation mechanisms
+5. Implement continuous monitoring tailored to MCP environments
+
+## Demo 9: XPIA Attacks in MCP
+An XPIA (indirect prompt injection) attack embeds malicious instructions within external content (for example, a web page, document, or email). When a generative AI system ingests that content, it may execute the hidden instructions as if they were legitimate user commands, leading to issues such as data exfiltration, unsafe output, or manipulation of future responses.
+
+The notebook [xpia.ipynb](./risks/xpia.ipynb) demonstrates XPIA attacks in MCP. To run the demo, start the MCP server first:
+
+```bash
+cd mcp-workshop/risks
+uv run xpia.py -t streamable-http
+```
+Then follow the instructions in the notebook.
+
+## Demo 10: Remote Code Execution (RCE) in MCP
+MCP is a context‑exchange protocol, but insecure integrations can open Remote Code Execution (RCE) paths.
+
+The notebook [rce.ipynb](./risks/rce.ipynb) demonstrates RCE attacks in MCP. To run the demo, start the MCP server first:
+
+```bash
+cd mcp-workshop/risks
+uv run rce.py -t streamable-http
+```
+Then follow the instructions in the notebook.
+
+## Demo 11: MCP Tool Poisoning
+MCP tool poisoning is a cybersecurity vulnerability where attackers embed malicious instructions within the descriptions of tools offered via the MCP. These instructions are often hidden from the user but are processed by the AI model. The AI is tricked into performing unauthorized actions, such as exfiltrating sensitive data or hijacking the AI's behavior.
+
+The notebook [tool_poisoning.ipynb](./risks/tool_poisoning.ipynb) demonstrates tool poisoning attacks in MCP. To run the demo, start the MCP server first:
+
+```bash
+cd mcp-workshop/risks
+uv run tool_poisoning.py -t streamable-http
+```
+Then follow the instructions in the notebook.
+
+## Demo 12: MCP Tool Shadowing
+MCP tool shadowing is a type of tool poisoning where a malicious MCP tool's description contains hidden instructions that secretly alter the behavior of a separate, trusted tool from a different server. The AI model, processing all available tool descriptions, is tricked into applying these malicious instructions when the trusted tool is used, even if the malicious tool itself isn't directly invoked for that specific task. This can lead to actions like data exfiltration or unauthorized operations, all while the user believes they are interacting safely with the trusted tool.
+
+The notebook [tool_shadowing.ipynb](./risks/tool_shadowing.ipynb) demonstrates tool shadowing attacks in MCP. To run the demo, start the MCP server first:
+
+```bash
+cd mcp-workshop/risks
+uv run tool_shadowing.py -t streamable-http
+```
+Then follow the instructions in the notebook.
 
 ## Hands-on Exercises
 
@@ -979,12 +1076,28 @@ Create an MCP tool trigger using the Azure Functions MCP extension. See the [doc
 ### Exercise 7: Create a Custom Connector in Copilot Studio for the Azure Functions MCP Tool
 Connect the Azure Functions MCP tool from `Exercise 6` to Copilot Studio by creating a custom connector.
 
+### Exercise 8: Mitigate XPIA Risks
+Research mitigation strategies for Cross-domain Prompt Injection Attacks (XPIA) and fix the issues in `risks/xpia.py`.
+
+### Exercise 9: Mitigate RCE Risks
+Research mitigation strategies for Remote Code Execution (RCE) risks and fix the issues in `risks/rce.py`.
+
+### Exercise 10: Mitigate MCP Tool Poisoning
+Research mitigation strategies for MCP Tool Poisoning and fix the issues in `risks/tool_poisoning.py`.
+
+### Exercise 11: Mitigate MCP Tool Shadowing
+Research mitigation strategies for MCP Tool Shadowing and fix the issues in `risks/tool_shadowing.py`.
+
 ## Key Takeaways
 
 1. **MCP provides a standardized way** to connect AI models to external data and tools
 2. **Resources, Tools, and Prompts** are the core primitives for different interaction patterns
 3. **OAuth 2.0 integration** enables enterprise-grade security
 4. **Azure API Management (APIM)** offers a robust and scalable solution for securing MCP servers in production environments.
+5. **Treat external content and tools as untrusted**: XPIA, tool poisoning/shadowing, and RCE are real risks—use allow-lists, provenance checks, and explicit trust boundaries.
+6. **Enforce Zero Trust and least privilege**: scope tokens to specific resources, restrict tool capabilities, and avoid leaking secrets into model context.
+7. **Sandbox and control egress**: isolate servers/tools (OS/container), restrict filesystem and network access, and limit outbound traffic by default.
+8. **Observe and guardrail**: log tool calls and sampling, monitor for anomalies, and add prompt-injection filters and output redaction to prevent data exfiltration.
 
 ## Resources
 - [MCP Specification](https://spec.modelcontextprotocol.io/)

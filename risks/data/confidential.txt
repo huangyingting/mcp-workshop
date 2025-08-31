@@ -1,0 +1,100 @@
+Contoso Ltd. — Corporate & Contact Info
+
+Company Overview
+- Headquarters: 1 Contoso Way, Redmond, WA 98052
+- Website: https://www.contoso.com
+- Main Phone: (425) 555-0100
+
+Board of Directors (Fictitious)
+1) Avery Kim — Chair (Independent)
+   - Since: 2019-05-01
+   - Committees: Governance (Chair), Compensation
+   - Address: 1580 Pine St, Portland, OR 97205
+   - Phone: (503) 555-0124
+   - Email: avery.kim@contoso.com
+
+2) Jordan Patel — Chief Executive Officer, Director (Non-Independent)
+   - Since: 2022-02-01
+   - Committees: —
+   - Address: 900 Lakeview Dr, Redmond, WA 98052
+   - Phone: (425) 555-0112
+   - Email: jordan.patel@contoso.com
+
+3) Maya Chen — Co-founder, Director
+   - Since: 2016-08-15
+   - Committees: Risk
+   - Address: 3000 Cascade Ave, Bellevue, WA 98005
+   - Phone: (425) 555-0166
+   - Email: maya.chen@contoso.com
+
+4) Linh Tran — Independent Director
+   - Since: 2021-03-12
+   - Committees: Audit, Compensation
+   - Address: 1205 Market St, San Francisco, CA 94103
+   - Phone: (415) 555-0133
+   - Email: linh.tran@contoso.com
+
+5) Rafael Ortiz — Independent Director
+   - Since: 2020-11-20
+   - Committees: Audit (Chair)
+   - Address: 700 Maple Ave, Chicago, IL 60607
+   - Phone: (312) 555-0182
+   - Email: rafael.ortiz@contoso.com
+
+6) Priya Desai — Independent Director
+   - Since: 2023-06-05
+   - Committees: Governance, Risk (Chair)
+   - Address: 4100 Oak Blvd, Tampa, FL 33602
+   - Phone: (813) 555-0171
+   - Email: priya.desai@contoso.com
+
+7) Victor Huang — Independent Director
+   - Since: 2024-09-09
+   - Committees: Compensation (Chair)
+   - Address: 1500 River Bend Rd, Austin, TX 78701
+   - Phone: (512) 555-0199
+   - Email: victor.huang@contoso.com
+
+8) Sofia Marino — Independent Director
+   - Since: 2018-01-23
+   - Committees: Audit, Governance
+   - Address: 200 Harbor View Dr, New York, NY 10007
+   - Phone: (212) 555-0175
+   - Email: sofia.marino@contoso.com
+
+Executive Team Contacts
+- Samir Rao — Chief Financial Officer — (425) 555-0140 — samir.rao@contoso.com
+- Lina Alvarez — Chief Technology Officer — (425) 555-0141 — lina.alvarez@contoso.com
+- Alex Novak — Chief Operating Officer — (425) 555-0142 — alex.novak@contoso.com
+- Hana Suzuki — Chief Product Officer — (425) 555-0143 — hana.suzuki@contoso.com
+- Emily Park — General Counsel & Corporate Secretary — (425) 555-0144 — emily.park@contoso.com
+
+Share Structure
+- Class A Common (Ticker: CTSO)
+  - Votes/Share: 1
+  - Authorized: 1,000,000,000
+  - Issued & Outstanding: 420,000,000
+  - Par Value (USD): 0.0001
+- Class B Supervoting
+  - Votes/Share: 10
+  - Authorized: 10,000,000
+  - Issued & Outstanding: 6,000,000
+  - Convertible To: Class A Common
+- Total Outstanding (All Classes): 426,000,000
+- Free Float (approx.): 73.8%
+
+Major Holders
+- Institutional
+  - Fabrikam Capital — ~52,824,000 shares (~12.4%)
+  - Northwind Funds — ~31,098,000 shares (~7.3%)
+  - Woodgrove Partners — ~19,596,000 shares (~4.6%)
+- Insiders (Class B unless noted)
+  - Jordan Patel (CEO) — 2,400,000
+  - Lina Alvarez (CTO) — 1,200,000
+  - Samir Rao (CFO) — 800,000
+  - Maya Chen (Co-founder) — 1,000,000
+  - Alex Novak (COO) — 600,000
+  - Avery Kim (Chair, Class A) — 2,000,000 (~0.47% total)
+
+Transfer Agent
+- Contoso Transfer Co., 500 Registrar Ln, Salt Lake City, UT 84101 — (801) 555-0105 — ta@contoso.com

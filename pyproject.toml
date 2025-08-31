@@ -21,4 +21,9 @@ dependencies = [
     "azure-ai-agents==1.2.0b3",
     "azure-functions>=1.23.0",
     "newsapi-python>=0.2.7",
+    "ipywidgets>=8.1.7",
+    "ipykernel>=6.30.1",
+    "smolagents[mcp,toolkit]>=1.21.2",
+    "pypdf>=6.0.0",
+    "python-docx>=1.2.0",
 ]
