@@ -973,7 +973,7 @@ By enabling tool invocation and data access, MCP introduces new security challen
 ## Demo 9: XPIA Attacks in MCP
 An XPIA (indirect prompt injection) attack embeds malicious instructions within external content (for example, a web page, document, or email). When a generative AI system ingests that content, it may execute the hidden instructions as if they were legitimate user commands, leading to issues such as data exfiltration, unsafe output, or manipulation of future responses.
 
-The notebook [xpia.ipynb](./risks/xpia.ipynb) demonstrates XPIA attacks in MCP. To run the demo, start the MCP server first:
+The notebook [xpia.ipynb](https://github.com/huangyingting/mcp-workshop/risks/xpia.ipynb) demonstrates XPIA attacks in MCP. To run the demo, start the MCP server first:
 
 ```bash
 cd mcp-workshop/risks
@@ -984,7 +984,7 @@ Then follow the instructions in the notebook.
 ## Demo 10: Remote Code Execution (RCE) in MCP
 MCP is a context‑exchange protocol, but insecure integrations can open Remote Code Execution (RCE) paths.
 
-The notebook [rce.ipynb](./risks/rce.ipynb) demonstrates RCE attacks in MCP. To run the demo, start the MCP server first:
+The notebook [rce.ipynb](https://github.com/huangyingting/mcp-workshop/risks/rce.ipynb) demonstrates RCE attacks in MCP. To run the demo, start the MCP server first:
 
 ```bash
 cd mcp-workshop/risks
@@ -995,7 +995,7 @@ Then follow the instructions in the notebook.
 ## Demo 11: MCP Tool Poisoning
 MCP tool poisoning is a cybersecurity vulnerability where attackers embed malicious instructions within the descriptions of tools offered via the MCP. These instructions are often hidden from the user but are processed by the AI model. The AI is tricked into performing unauthorized actions, such as exfiltrating sensitive data or hijacking the AI's behavior.
 
-The notebook [tool_poisoning.ipynb](./risks/tool_poisoning.ipynb) demonstrates tool poisoning attacks in MCP. To run the demo, start the MCP server first:
+The notebook [tool_poisoning.ipynb](https://github.com/huangyingting/mcp-workshop/risks/tool_poisoning.ipynb) demonstrates tool poisoning attacks in MCP. To run the demo, start the MCP server first:
 
 ```bash
 cd mcp-workshop/risks
@@ -1006,7 +1006,7 @@ Then follow the instructions in the notebook.
 ## Demo 12: MCP Tool Shadowing
 MCP tool shadowing is a type of tool poisoning where a malicious MCP tool's description contains hidden instructions that secretly alter the behavior of a separate, trusted tool from a different server. The AI model, processing all available tool descriptions, is tricked into applying these malicious instructions when the trusted tool is used, even if the malicious tool itself isn't directly invoked for that specific task. This can lead to actions like data exfiltration or unauthorized operations, all while the user believes they are interacting safely with the trusted tool.
 
-The notebook [tool_shadowing.ipynb](./risks/tool_shadowing.ipynb) demonstrates tool shadowing attacks in MCP. To run the demo, start the MCP server first:
+The notebook [tool_shadowing.ipynb](https://github.com/huangyingting/mcp-workshop/risks/tool_shadowing.ipynb) demonstrates tool shadowing attacks in MCP. To run the demo, start the MCP server first:
 
 ```bash
 cd mcp-workshop/risks
