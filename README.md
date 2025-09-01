@@ -182,6 +182,14 @@ The workshop includes a comprehensive console client (`clients/console_client.py
 
 ### Architecture
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
+  'primaryColor': '#e6f3ff',
+  'primaryBorderColor': '#0066cc',
+  'primaryTextColor': '#0f172a',
+  'tertiaryColor': '#f8fafc',
+  'lineColor': '#64748b'
+}}}%%
 graph TB
     subgraph "Initialization"
         Start([Start]) --> ParseArgs[Parse Command Line Arguments]
@@ -241,10 +249,10 @@ graph TB
     ConnectSSE -.-> SSETransport
     ConnectHTTP -.-> HTTPTransport
     
-    style Start fill:#90EE90
-    style Cleanup fill:#FFB6C1
-    style CallOpenAI fill:#87CEEB
-    style CallMCPTool fill:#DDA0DD
+    style Start fill:#86efac,stroke:#059669,stroke-width:2px
+    style Cleanup fill:#fecaca,stroke:#ef4444,stroke-width:2px
+    style CallOpenAI fill:#bfdbfe,stroke:#3b82f6,stroke-width:2px
+    style CallMCPTool fill:#e9d5ff,stroke:#a855f7,stroke-width:2px
 ```
 
 ### Execution Flow
@@ -318,6 +326,20 @@ The workshop also includes an EntraID client (`clients/entraid_client.py`) that 
 
 ### Architecture
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
+  'primaryColor': '#e6f3ff',
+  'primaryBorderColor': '#0066cc',
+  'primaryTextColor': '#0f172a',
+  'tertiaryColor': '#f8fafc',
+  'lineColor': '#64748b',
+  'actorBkg': '#e6f3ff',
+  'actorBorderColor': '#0066cc',
+  'signalColor': '#64748b',
+  'signalTextColor': '#0f172a',
+  'noteBkgColor': '#f8fafc',
+  'noteTextColor': '#0f172a'
+}}}%%
 sequenceDiagram
     participant User
     participant Client as MCP Client
@@ -415,6 +437,14 @@ Our first demo showcases a comprehensive MCP server that provides stock market d
 
 ### Architecture
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
+  'primaryColor': '#e6f3ff',
+  'primaryBorderColor': '#0066cc',
+  'primaryTextColor': '#0f172a',
+  'tertiaryColor': '#f8fafc',
+  'lineColor': '#64748b'
+}}}%%
 graph TB
     %% Main Server
     Server[FastMCP Stock Server<br/>simple_stock_server.py]
@@ -484,14 +514,14 @@ graph TB
     StockResource --> GetPrice
     
     %% Styling
-    classDef serverClass fill:#e1f5fe,stroke:#0277bd,stroke-width:3px
-    classDef dataClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef toolClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    classDef resourceClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef promptClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    classDef helperClass fill:#f1f8e9,stroke:#689f38,stroke-width:2px
-    classDef schemaClass fill:#e0f2f1,stroke:#00695c,stroke-width:2px
-    classDef externalClass fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    classDef serverClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    classDef dataClass fill:#faf5ff,stroke:#7c3aed,stroke-width:2px
+    classDef toolClass fill:#ecfdf5,stroke:#10b981,stroke-width:2px
+    classDef resourceClass fill:#fff7ed,stroke:#fb923c,stroke-width:2px
+    classDef promptClass fill:#fdf2f8,stroke:#ec4899,stroke-width:2px
+    classDef helperClass fill:#f1f5f9,stroke:#64748b,stroke-width:2px
+    classDef schemaClass fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
+    classDef externalClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
     
     class Server serverClass
     class MockData dataClass
@@ -568,6 +598,14 @@ Our second demo shows how to implement OAuth support with Azure Entra ID, demons
 
 ### Architecture
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
+  'primaryColor': '#e6f3ff',
+  'primaryBorderColor': '#0066cc',
+  'primaryTextColor': '#0f172a',
+  'tertiaryColor': '#f8fafc',
+  'lineColor': '#64748b'
+}}}%%
 graph TD
     %% External Systems
     Client[Client Application]
@@ -619,12 +657,12 @@ graph TD
     Config -.->|Configure| EntraIdTokenVerifier
     
     %% Styling
-    classDef external fill:#e1f5fe
-    classDef server fill:#f3e5f5
-    classDef auth fill:#fff3e0
-    classDef tool fill:#e8f5e8
-    classDef config fill:#fce4ec
-    
+    classDef external fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    classDef server fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    classDef auth fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
+    classDef tool fill:#ecfdf5,stroke:#10b981,stroke-width:2px
+    classDef config fill:#f1f5f9,stroke:#64748b,stroke-width:2px
+
     class Client,EntraID,JWKSEndpoint external
     class FastMCP server
     class EntraIdTokenVerifier,AuthSettings,JWKS auth
@@ -718,6 +756,14 @@ Refer to [Expose REST API in API Management as an MCP server](https://learn.micr
 #### 2. APIM as Auth Gateway for MCP Servers
 In this pattern, APIM acts as an authorization server (AS), implementing dynamic client registration while delegating the underlying authentication and authorization to Microsoft Entra ID.
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': {
+  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
+  'primaryColor': '#e6f3ff',
+  'primaryBorderColor': '#0066cc',
+  'primaryTextColor': '#0f172a',
+  'tertiaryColor': '#f8fafc',
+  'lineColor': '#64748b'
+}}}%%
 graph TD
     %% MCP Clients
     subgraph MCPClients["MCP Clients"]
@@ -753,11 +799,11 @@ graph TD
     MCPClients -.->|🔐 Login / Consent| EntraID
 
     %% Styling
-    classDef clientBox fill:#f9f5e6,stroke:#8b4513,stroke-width:2px
-    classDef gatewayBox fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef serverBox fill:#e6f7ff,stroke:#0099cc,stroke-width:2px
-    classDef authBox fill:#fff2e6,stroke:#ff6600,stroke-width:2px
-    classDef toolBox fill:#f0f8ff,stroke:#4682b4,stroke-width:1px
+    classDef clientBox fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
+    classDef gatewayBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
+    classDef serverBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
+    classDef authBox fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
+    classDef toolBox fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px
 
     class MCPClients clientBox
     class Gateway,APIM gatewayBox
