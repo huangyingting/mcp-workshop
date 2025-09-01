@@ -320,9 +320,9 @@ The workshop also includes an EntraID client (`clients/entraid_client.py`) that 
 ```mermaid
 sequenceDiagram
     participant User
-    participant Client as "MCP Client"
-    participant MCPServer as "MCP Server"
-    participant EntraID as "Microsoft Entra ID"
+    participant Client as MCP Client
+    participant MCPServer as MCP Server
+    participant EntraID as Microsoft Entra ID
 
     User->>+Client: Run script
 
