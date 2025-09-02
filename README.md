@@ -570,7 +570,11 @@ uv run mcp dev servers/simple_stock_server.py
 #### Using VS Code
 1. Launch the `simple_stock_server` from `.vscode/mcp.json` by clicking the `Start` link above its configuration.
 2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: simple_stock_server` tool.
-3. Ask the agent questions like, "What's the price of Tesla stock?" or "Compare Apple and Google stock prices."
+3. Ask the agent questions like, 
+    - What's the price of Tesla stock?
+    - Compare Apple and Google stock prices
+    - Get Microsoft stock info (elicitation)
+    - Generate a headline for Amazon stock (sampling)
 
 #### Using MCP Inspector
 ```bash
@@ -589,8 +593,8 @@ uv run clients/console_client.py servers/simple_stock_server.py
 # Try these example queries:
 # - "What's the price of Tesla stock?"
 # - "Compare Apple and Google stock prices"  
-# - "Show me the stock analysis prompt for Microsoft"
-# - "Generate a headline for Amazon stock"
+# - "Get Microsoft stock info" (elicitation)
+# - "Generate a headline for Amazon stock" (sampling)
 ```
 
 ## Demo 2: OAuth-Protected Weather Server
