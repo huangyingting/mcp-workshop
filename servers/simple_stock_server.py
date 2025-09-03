@@ -176,6 +176,178 @@ Sector: {data['sector']}"""
   except Exception as e:
     return f"Error fetching info for '{symbol}': {e}"
 
+
+@mcp.tool()
+def calculate_portfolio_value(holdings: dict[str, int]) -> str:
+    """
+    Calculate total portfolio value.
+    holdings: dict mapping stock symbols to share counts
+    """
+    try:
+        if not isinstance(holdings, dict) or not holdings:
+            return "Error: Provide a non-empty dict of holdings like {'AAPL': 10, 'MSFT': 5}."
+
+        lines: list[str] = []
+        total = 0.0
+        errors: list[str] = []
+
+        for sym, shares in holdings.items():
+            symbol = str(sym).upper().strip()
+            if not symbol:
+                errors.append(f"Invalid symbol key: {sym!r}")
+                continue
+            if not isinstance(shares, int):
+                errors.append(f"{symbol}: share count must be an int, got {type(shares).__name__}")
+                continue
+            if shares < 0:
+                errors.append(f"{symbol}: negative share count not allowed")
+                continue
+
+            price = get_stock_price(symbol)
+            if price < 0:
+                errors.append(f"{symbol}: unknown symbol")
+                continue
+
+            value = shares * price
+            total += value
+            lines.append(f"{symbol}: {shares} @ ${price:.2f} = ${value:.2f}")
+
+        summary = "\n".join(lines) if lines else "No valid holdings."
+        summary += f"\nTotal: ${total:.2f}"
+        if errors:
+            summary += "\nNotes: " + "; ".join(errors)
+        return summary
+    except Exception as e:
+        return f"Error calculating portfolio value: {e}"
+
+@mcp.resource("stock://sectors")
+def sectors_resource() -> str:
+    """Return available market sectors."""
+    try:
+        sectors = sorted({info.get("sector", "").strip() for info in MOCK_STOCK_DATA.values() if info.get("sector")})
+        return ", ".join(sectors) if sectors else "No sectors available."
+    except Exception as e:
+        return f"Error retrieving sectors: {e}"
+
+@mcp.prompt("risk_assessment_prompt")
+def risk_assessment(symbol: str, risk_tolerance: str):
+    """Generate a risk assessment prompt."""
+    tol = (risk_tolerance or "").strip().lower()
+    tol_norm = tol if tol in {"conservative", "moderate", "aggressive"} else "moderate"
+
+    tol_briefs = {
+        "conservative": "prioritize capital preservation and low drawdowns; avoid high volatility and speculative exposure",
+        "moderate": "balance growth and stability; tolerate moderate volatility with prudent risk controls",
+        "aggressive": "seek higher growth; accept higher volatility and drawdown risk with active risk management",
+    }
+
+    if symbol not in MOCK_STOCK_DATA:
+        brief = tol_briefs[tol_norm]
+        content = (
+            f"You are a concise portfolio risk assistant.\n"
+            f"Ticker '{symbol}' is unknown. Provide a short risk checklist for a {tol_norm} investor ({brief}).\n"
+            "- List 3-5 key risk factors to consider (market, sector, company, valuation, liquidity).\n"
+            "- Suggest a rough position sizing guideline (% of portfolio) for this tolerance.\n"
+            "- Offer 1-2 risk management tips (time horizon, stop-loss, diversification).\n"
+            "Keep it to 6-8 lines. Avoid boilerplate and disclaimers."
+        )
+        return [base.UserMessage(content)]
+
+    data = MOCK_STOCK_DATA[symbol]
+    name = data.get("name", symbol)
+    price = data.get("price")
+    sector = data.get("sector", "n/a")
+    market_cap = _humanize_number(data.get("market_cap"))
+    pe_display = f"{data.get('pe_ratio'):.2f}" if data.get("pe_ratio") else "n/a"
+    div_yield = f"{(data.get('dividend_yield') or 0.0) * 100:.2f}%"
+    perf = get_performance_summary(symbol, "1mo")
+    brief = tol_briefs[tol_norm]
+
+    content = (
+        f"You are a concise portfolio risk assistant. Assess risk for {name} ({symbol}) "
+        f"for a {tol_norm} investor ({brief}).\n"
+        f"- Sector: {sector}\n"
+        f"- Price: ${price:.2f} | Market Cap: {market_cap} | P/E: {pe_display} | Dividend: {div_yield}\n"
+        f"- Recent performance: {perf}\n\n"
+        "Return:\n"
+        "1) Top risk factors (3-5 bullets max)\n"
+        "2) Volatility expectation (Low/Med/High) and why\n"
+        "3) Suggested position sizing range (% of portfolio) for this tolerance\n"
+        "4) Risk management tips (e.g., stop-loss or time horizon)\n"
+        "5) Overall risk rating (Low/Med/High)\n"
+        "Keep it to 6-8 lines. No disclaimers."
+    )
+    return [base.UserMessage(content)]
+
+class InvestmentPreference(BaseModel):
+    risk_level: str = Field(description="low, medium, or high")
+    time_horizon: str = Field(description="short, medium, or long-term")
+
+@mcp.tool()
+async def get_investment_advice(symbol: str, ctx: Context[ServerSession, None]) -> str:
+    """Provide investment advice based on user preferences."""
+    # Gather user preferences
+    result = await ctx.elicit(
+        message="Share investment preferences (risk_level: low/medium/high; time_horizon: short/medium/long-term).",
+        schema=InvestmentPreference,
+    )
+    # Defaults if user declines or incomplete
+    risk_raw = (getattr(result.data, "risk_level", None) if result.action == "accept" and result.data else None) or "medium"
+    horizon_raw = (getattr(result.data, "time_horizon", None) if result.action == "accept" and result.data else None) or "medium"
+
+    risk = str(risk_raw).strip().lower()
+    if risk not in {"low", "medium", "high"}:
+        risk = "medium"
+
+    hr = str(horizon_raw).strip().lower()
+    if hr in {"short", "short-term"}:
+        horizon = "short"
+    elif hr in {"medium", "mid", "mid-term"}:
+        horizon = "medium"
+    elif hr in {"long", "long-term"}:
+        horizon = "long-term"
+    else:
+        horizon = "medium"
+
+    # Unknown ticker handling
+    if symbol not in MOCK_STOCK_DATA:
+        return (
+            f"'{symbol}' is not available. Preferences: risk={risk}, horizon={horizon}.\n"
+            "- Use diversified exposure to the target theme/sector.\n"
+            "- Position size: low 1-3%, medium 3-6%, high 5-10% of portfolio.\n"
+            "- Controls: set max drawdown, stagger entries (DCA), review quarterly."
+        )
+
+    data = MOCK_STOCK_DATA[symbol]
+    name = data.get("name", symbol)
+    price = data.get("price", 0.0)
+    sector = data.get("sector", "n/a")
+    market_cap = _humanize_number(data.get("market_cap"))
+    pe_display = f"{data.get('pe_ratio'):.2f}" if data.get("pe_ratio") else "n/a"
+    perf = get_performance_summary(symbol, "1mo")
+
+    # Simple policy by risk level
+    sizing = {"low": "1-3%", "medium": "3-6%", "high": "5-10%"}[risk]
+    controls = {
+        "short": "tight stops, catalyst-driven, reassess weekly",
+        "medium": "trend/valuation checks, monthly review",
+        "long-term": "DCA, fundamentals focus, quarterly review",
+    }[horizon]
+    tilt = {
+        "low": "favor stability/dividends; avoid high volatility",
+        "medium": "balance growth and stability",
+        "high": "seek growth; accept higher volatility",
+    }[risk]
+
+    return (
+        f"{name} ({symbol}) | Sector: {sector} | Price: ${price:.2f} | Cap: {market_cap} | P/E: {pe_display}\n"
+        f"Recent: {perf}\n"
+        f"- Risk profile: {risk}; Horizon: {horizon}\n"
+        f"- Position size: {sizing} of portfolio\n"
+        f"- Approach: {tilt}\n"
+        f"- Controls: {controls}"
+    )
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Stock Price MCP server")
   parser.add_argument("--transport", "-t", choices=["stdio", "sse", "streamable-http"], default="stdio")
