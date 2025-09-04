@@ -29,7 +29,7 @@ MOCK_STOCK_DATA = {
     "NVDA": {"price": 445.32, "name": "NVIDIA Corporation", "sector": "Technology", "market_cap": 1100000000000, "pe_ratio": 65.2, "dividend_yield": 0.0012}
 }
 
-mcp = FastMCP("stock_server")
+mcp = FastMCP("simple_stock_server")
 
 def generate_mock_historical_data(symbol: str, period: str = "1mo") -> pd.DataFrame:
   """Generate mock historical stock data for a given symbol and time period."""
