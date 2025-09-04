@@ -21,11 +21,7 @@
     }
   },
 
-  "containerEnv": {
-    "PATH": "/home/vscode/.local/bin:${containerEnv:PATH}"
-  },
-
-  "postCreateCommand": "bash -lc 'curl -LsSf https://astral.sh/uv/install.sh | sh; if [ -f package.json ]; then corepack enable >/dev/null 2>&1 || true; if [ -f pnpm-lock.yaml ]; then pnpm i; elif [ -f yarn.lock ]; then yarn install; else npm ci || npm i; fi; fi; if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi'",
+  "postCreateCommand": "bash -lc 'if [ -f package.json ]; then corepack enable >/dev/null 2>&1 || true; if [ -f pnpm-lock.yaml ]; then pnpm i; elif [ -f yarn.lock ]; then yarn install; else npm ci || npm i; fi; fi; if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi'",
 
   "forwardPorts": [3000],
   "portsAttributes": {
