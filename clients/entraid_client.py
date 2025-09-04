@@ -22,6 +22,12 @@ from mcp.client.streamable_http import MCP_PROTOCOL_VERSION
 from mcp.types import LATEST_PROTOCOL_VERSION
 from pydantic import ValidationError
 import re
+import json, sys, logging
+from collections.abc import Sequence
+from contextlib import AsyncExitStack
+from mcp import types
+from mcp.shared.context import RequestContext
+from openai import AsyncAzureOpenAI
 
 load_dotenv()
 
@@ -154,7 +160,145 @@ class EntraIDDeviceCodeAuth(httpx.Auth):
       yield request
 
 
-async def main():
+def _to_oa_messages(msgs: list[types.SamplingMessage]) -> list[dict]:
+  """Convert MCP sampling messages to OpenAI Chat API format."""
+  return [{"role": m.role, "content": getattr(m.content, "text", str(m.content))} for m in msgs]
+
+class EntraIDChatClient:
+  """Chat client using Entra ID auth and Azure OpenAI for tool orchestration."""
+  def __init__(self, server_url: str, auth: EntraIDDeviceCodeAuth):
+    self.server_url = server_url
+    self.auth = auth
+    self.exit_stack = AsyncExitStack()
+    self.session: ClientSession | None = None
+    self.available_tools: list[types.Tool] = []
+
+    self.azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    self.azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    self.azure_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+    self.azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+    missing = [k for k, v in {
+      "AZURE_OPENAI_ENDPOINT": self.azure_endpoint,
+      "AZURE_OPENAI_API_KEY": self.azure_api_key,
+      "AZURE_OPENAI_API_VERSION": self.azure_api_version,
+      "AZURE_OPENAI_DEPLOYMENT": self.azure_deployment,
+    }.items() if not v]
+    if missing:
+      raise RuntimeError(f"Missing Azure config: {', '.join(missing)}")
+    self.openai = AsyncAzureOpenAI(
+      azure_endpoint=self.azure_endpoint,
+      api_key=self.azure_api_key,
+      api_version=self.azure_api_version,
+    )
+    logging.basicConfig(level=logging.INFO)
+    self.log = logging.getLogger("entraid_chat_client")
+
+  async def sampling_callback(
+      self, _context: RequestContext[ClientSession, None], params: types.CreateMessageRequestParams
+  ) -> types.CreateMessageResult:
+    try:
+      oa_msgs = _to_oa_messages(params.messages)
+      r = await self.openai.chat.completions.create(
+        model=self.azure_deployment,
+        messages=oa_msgs,
+      )
+      return types.CreateMessageResult(
+        role="assistant",
+        content=types.TextContent(type="text", text=r.choices[0].message.content or ""),
+        model=self.azure_deployment,
+        stopReason="endTurn",
+      )
+    except Exception as e:
+      self.log.error("sampling error: %s", e)
+      return types.CreateMessageResult(
+        content=types.TextContent(type="text", text=f"Sampling error: {e}"),
+        model=self.azure_deployment,
+        stopReason="endTurn",
+      )
+
+  async def elicitation_callback(self, *_):
+    return types.ElicitResult(action="decline")
+
+  async def connect(self):
+    read, write, _ = await self.exit_stack.enter_async_context(
+      streamablehttp_client(self.server_url, auth=self.auth)
+    )
+    self.session = await self.exit_stack.enter_async_context(
+      ClientSession(
+        read, write,
+        sampling_callback=self.sampling_callback,
+        elicitation_callback=self.elicitation_callback,
+      )
+    )
+    await self.session.initialize()
+    tools_resp = await self.session.list_tools()
+    self.available_tools = tools_resp.tools
+    resources_resp = await self.session.list_resources()
+    print(f"Available tools: {[t.name for t in self.available_tools]}")
+    print(f"Available resources: {[r.uri for r in resources_resp.resources]}")
+
+  def _tool_specs(self) -> list[dict]:
+    return [{
+      "type": "function",
+      "function": {
+        "name": t.name,
+        "description": t.description,
+        "parameters": t.inputSchema
+      }
+    } for t in self.available_tools]
+
+  async def process_query(self, query: str) -> str:
+    messages: list[dict] = [{"role": "user", "content": query}]
+    tools = self._tool_specs()
+
+    while True:
+      resp = await self.openai.chat.completions.create(
+        model=self.azure_deployment,
+        messages=messages,
+        tools=tools or None,
+      )
+      m = resp.choices[0].message
+      if not m.tool_calls:
+        return m.content or ""
+
+      messages.append({
+        "role": "assistant",
+        "tool_calls": [{
+          "id": tc.id,
+          "type": tc.type,
+          "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+        } for tc in m.tool_calls],
+      })
+
+      for tc in m.tool_calls:
+        args = json.loads(tc.function.arguments or "{}")
+        result = await self.session.call_tool(tc.function.name, args)
+        payload = [c.model_dump() for c in result.content]
+        self.log.info("Tool %s(%s) -> %s", tc.function.name, args, payload)
+        messages.append({
+          "role": "tool",
+            "tool_call_id": tc.id,
+            "name": tc.function.name,
+            "content": json.dumps(payload),
+        })
+
+  async def chat_loop(self):
+    print("EntraID MCP Chat Started. Type 'quit' to exit.")
+    while True:
+      try:
+        q = input("Query: ").strip()
+        if q.lower() in {"quit", "exit"}:
+          break
+        print(await self.process_query(q))
+      except Exception as e:
+        print(f"Error: {e!r}")
+
+  async def cleanup(self):
+    await self.exit_stack.aclose()
+
+
+async def main(argv: Sequence[str] | None = None):
+  argv = argv or sys.argv
   client_id = os.getenv("CLIENT_ID")
   if not client_id:
     print("CLIENT_ID is not set. Export it before running.")
@@ -165,14 +309,12 @@ async def main():
       server_url="http://localhost:8000/mcp"
   )
 
-  async with streamablehttp_client("http://localhost:8000/mcp", auth=entraid_auth) as (read, write, _):
-    async with ClientSession(read, write) as session:
-      await session.initialize()
-      tools = await session.list_tools()
-      print(f"Available tools: {[tool.name for tool in tools.tools]}")
-      resources = await session.list_resources()
-      print(f"Available resources: {[r.uri for r in resources.resources]}")
-
+  chat_client = EntraIDChatClient("http://localhost:8000/mcp", entraid_auth)
+  try:
+    await chat_client.connect()
+    await chat_client.chat_loop()
+  finally:
+    await chat_client.cleanup()
 
 if __name__ == "__main__":
   asyncio.run(main())

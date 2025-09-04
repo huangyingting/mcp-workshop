@@ -22,7 +22,10 @@ from datetime import datetime, timedelta, timezone
 import random
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from pydantic import AnyHttpUrl
+from dotenv import load_dotenv
 
+load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("simple_stock_server")
 
@@ -116,7 +119,14 @@ class EntraIdTokenVerifier(TokenVerifier):
       return None
 
 
-mcp = FastMCP("simple_stock_server")
+mcp = FastMCP("simple_stock_server",
+    token_verifier=EntraIdTokenVerifier(TENANT_ID, CLIENT_ID),
+    auth=AuthSettings(
+        issuer_url=AnyHttpUrl(ISSUER_URL),
+        resource_server_url=AnyHttpUrl("http://localhost:8000/mcp"),
+        required_scopes=REQUIRED_SCOPES,
+    ),              
+              )
 
 def generate_mock_historical_data(symbol: str, period: str = "1mo") -> pd.DataFrame:
   """Generate mock historical stock data for a given symbol and time period."""
