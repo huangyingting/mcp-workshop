@@ -147,7 +147,7 @@ async def _get_graph_token_on_behalf_of(assertion_token: str) -> str:
 
 # Initialize FastMCP
 mcp = FastMCP(
-    "Weather Service",
+    "entraid_obo_server",
     token_verifier=EntraIdTokenVerifier(TENANT_ID, CLIENT_ID),
     auth=AuthSettings(
         issuer_url=AnyHttpUrl(ISSUER_URL),

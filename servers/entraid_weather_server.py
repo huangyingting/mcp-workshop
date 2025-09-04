@@ -104,7 +104,7 @@ class EntraIdTokenVerifier(TokenVerifier):
 
 # Initialize FastMCP
 mcp = FastMCP(
-    "Weather Service",
+    "entraid_weather_server",
     token_verifier=EntraIdTokenVerifier(TENANT_ID, CLIENT_ID),
     auth=AuthSettings(
         issuer_url=AnyHttpUrl(ISSUER_URL),

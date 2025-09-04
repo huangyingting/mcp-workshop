@@ -4,7 +4,12 @@ Run from the repository root:
     uv run mcp dev servers/simple_stock_server.py, or
     uv run servers/simple_stock_server.py -t streamable-http
 """
-
+import jwt
+import aiohttp
+import os
+from typing import Dict, Any, Optional
+from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.server.session import ServerSession
 from mcp.types import SamplingMessage, TextContent
@@ -13,8 +18,10 @@ import argparse
 import logging
 from pydantic import BaseModel, Field
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("simple_stock_server")
@@ -29,7 +36,87 @@ MOCK_STOCK_DATA = {
     "NVDA": {"price": 445.32, "name": "NVIDIA Corporation", "sector": "Technology", "market_cap": 1100000000000, "pe_ratio": 65.2, "dividend_yield": 0.0012}
 }
 
-mcp = FastMCP("stock_server")
+# Configuration
+TENANT_ID = os.getenv("TENANT_ID")
+CLIENT_ID = os.getenv("CLIENT_ID")
+SCOPES = os.getenv("SCOPES", "").split(",")
+REQUIRED_SCOPES = [f"api://{CLIENT_ID}/{scope}" for scope in SCOPES]
+ISSUER_URL = f"https://login.microsoftonline.com/{TENANT_ID}/v2.0"
+
+
+class EntraIdTokenVerifier(TokenVerifier):
+  """JWT token verifier for Entra ID."""
+
+  def __init__(self, tenant_id: str, client_id: str):
+    self.tenant_id = tenant_id
+    self.client_id = client_id
+    self.jwks_uri = f"https://login.microsoftonline.com/{tenant_id}/discovery/v2.0/keys"
+    self._jwks_cache: Optional[Dict[str, Any]] = None
+    self._cache_expiry: Optional[datetime] = None
+
+  async def _get_jwks(self) -> Dict[str, Any]:
+    """Fetch JWKS with 1-hour caching."""
+    now = datetime.now(timezone.utc)
+
+    if self._jwks_cache and self._cache_expiry and now < self._cache_expiry:
+      return self._jwks_cache
+
+    async with aiohttp.ClientSession() as session:
+      async with session.get(self.jwks_uri) as response:
+        if response.status != 200:
+          raise Exception(f"JWKS fetch failed: {response.status}")
+
+        self._jwks_cache = await response.json()
+        self._cache_expiry = now.replace(hour=now.hour + 1)
+        return self._jwks_cache
+
+  async def verify_token(self, token: str) -> AccessToken | None:
+    """Verify JWT token from Entra ID."""
+    logger.debug(f"Verifying token: {token}")
+    try:
+      header = jwt.get_unverified_header(token)
+      kid = header.get('kid')
+      if not kid:
+        raise jwt.InvalidTokenError("Missing 'kid' in token header")
+
+      jwks = await self._get_jwks()
+
+      # Find signing key
+      signing_key = None
+      for key in jwks.get('keys', []):
+        if key.get('kid') == kid:
+          signing_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+          break
+
+      if not signing_key:
+        raise jwt.InvalidKeyError(f"Signing key not found: {kid}")
+
+      # Verify token
+      payload = jwt.decode(
+          token, signing_key, algorithms=['RS256'],
+          audience=self.client_id, issuer=ISSUER_URL,
+          options={"verify_signature": True, "verify_exp": True,
+                   "verify_aud": True, "verify_iss": True}
+      )
+
+      # Extract scopes
+      raw_scopes = payload.get('scp', '').split() or payload.get('roles', [])
+      scopes = [f"api://{self.client_id}/{scope}" for scope in raw_scopes]
+
+      return AccessToken(
+          token=token,
+          client_id=self.client_id,
+          scopes=scopes,
+          expires_at=payload.get('exp')
+      )
+
+    except (jwt.ExpiredSignatureError, jwt.InvalidAudienceError,
+            jwt.InvalidIssuerError, jwt.InvalidTokenError) as e:
+      logger.error(f"Token verification failed: {e}")
+      return None
+
+
+mcp = FastMCP("simple_stock_server")
 
 def generate_mock_historical_data(symbol: str, period: str = "1mo") -> pd.DataFrame:
   """Generate mock historical stock data for a given symbol and time period."""
@@ -347,6 +434,16 @@ async def get_investment_advice(symbol: str, ctx: Context[ServerSession, None]) 
         f"- Approach: {tilt}\n"
         f"- Controls: {controls}"
     )
+
+@mcp.custom_route("/mcp/.well-known/oauth-protected-resource", methods=["GET"])
+async def custom_well_known_endpoint(request: Request) -> Response:
+  """OAuth protected resource metadata endpoint."""
+  return JSONResponse({
+      "resource": "http://localhost:8000/mcp",
+      "authorization_servers": [ISSUER_URL],
+      "scopes_supported": REQUIRED_SCOPES,
+      "bearer_methods_supported": ["header"]
+  })
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Stock Price MCP server")
