@@ -1,40 +1,34 @@
 {
-  "name": "mcp-workshop",
-  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
-  "remoteUser": "vscode",
-
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-azuretools.vscode-docker",
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "github.copilot"
-      ],
-      "settings": {
-        "editor.formatOnSave": true,
-        "files.eol": "\n",
-        "python.defaultInterpreterPath": "/usr/bin/python3"
-      }
-    }
-  },
-
-  "postCreateCommand": "bash -lc 'if [ -f package.json ]; then corepack enable >/dev/null 2>&1 || true; if [ -f pnpm-lock.yaml ]; then pnpm i; elif [ -f yarn.lock ]; then yarn install; else npm ci || npm i; fi; fi; if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi'",
-
-  "forwardPorts": [3000],
-  "portsAttributes": {
-    "3000": { "label": "Web" }
-  },
-
-  "mounts": [
-    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached"
-  ],
-
-  "hostRequirements": {
-    "cpus": 2,
-    "memory": "4gb",
-    "storage": "16gb"
-  }
+	"name": "MCP Workshop",
+	"image": "mcr.microsoft.com/devcontainers/python:1-3.11",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/va-h/devcontainers-features/uv:1": {},
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "20",
+			"installYarn": true
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"astral-sh.uv",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"charliermarsh.ruff",
+				"tamasfe.even-better-toml",
+				"ms-toolsai.jupyter",
+				"github.copilot",
+				"github.copilot-chat"
+			]
+		}
+	},
+	"forwardPorts": [
+		8000,
+		9000
+	],
+	"postCreateCommand": "uv sync"
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
 }
