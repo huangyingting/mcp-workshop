@@ -182,14 +182,6 @@ The workshop includes a comprehensive console client (`clients/console_client.py
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TB
     subgraph "Initialization"
         Start([Start]) --> ParseArgs[Parse Command Line Arguments]
@@ -248,11 +240,6 @@ graph TB
     ConnectStdio -.-> StdioTransport
     ConnectSSE -.-> SSETransport
     ConnectHTTP -.-> HTTPTransport
-    
-    style Start fill:#86efac,stroke:#059669,stroke-width:2px
-    style Cleanup fill:#fecaca,stroke:#ef4444,stroke-width:2px
-    style CallOpenAI fill:#bfdbfe,stroke:#3b82f6,stroke-width:2px
-    style CallMCPTool fill:#e9d5ff,stroke:#a855f7,stroke-width:2px
 ```
 
 ### Execution Flow
@@ -326,20 +313,6 @@ The workshop also includes an EntraID client (`clients/entraid_client.py`) that 
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b',
-  'actorBkg': '#e6f3ff',
-  'actorBorderColor': '#0066cc',
-  'signalColor': '#64748b',
-  'signalTextColor': '#0f172a',
-  'noteBkgColor': '#f8fafc',
-  'noteTextColor': '#0f172a'
-}}}%%
 sequenceDiagram
     participant User
     participant Client as MCP Client
@@ -349,41 +322,41 @@ sequenceDiagram
     User->>+Client: Run script
 
     Note over Client: Creates EntraIDDeviceCodeAuth instance
-    Client->>MCPServer: Initial API Request (no auth token)
-    MCPServer-->>Client: 401 Unauthorized with WWW-Authenticate header
+    Client->>+MCPServer: Initial API Request (no auth token)
+    MCPServer-->>-Client: 401 Unauthorized with WWW-Authenticate header
 
     Client->>Client: Discover protected resource metadata URL from header
     alt Metadata URL not in header
-        Client->>MCPServer: GET /.well-known/oauth-protected-resource
-        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+        Client->>+MCPServer: GET /.well-known/oauth-protected-resource
+        MCPServer-->>-Client: Return resource metadata (auth server, scopes)
     else Metadata URL present
-        Client->>MCPServer: GET metadata from URL
-        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+        Client->>+MCPServer: GET metadata from URL
+        MCPServer-->>-Client: Return resource metadata (auth server, scopes)
     end
 
     Note over Client: Initializes MSAL PublicClientApplication
-    Client->>EntraID: Initiate Device Code Flow
-    EntraID-->>Client: Device Code & User Verification URL
+    Client->>+EntraID: Initiate Device Code Flow
+    EntraID-->>-Client: Device Code & User Verification URL
 
     Client->>User: Display verification URL and code
-    User->>EntraID: Authenticates in browser
+    User->>+EntraID: Authenticates in browser
     
-    Client->>EntraID: Poll for token with device code
-    EntraID-->>Client: Access Token
+    Client->>+EntraID: Poll for token with device code
+    EntraID-->>-Client: Access Token
 
     Note over Client: Store token and prepare authed request
-    Client->>MCPServer: Retry API Request with Bearer Token
-    MCPServer-->>Client: 200 OK
+    Client->>+MCPServer: Retry API Request with Bearer Token
+    MCPServer-->>-Client: 200 OK
 
     Note over Client: Establish MCP Session
-    Client->>MCPServer: MCP Handshake (Initialize)
-    MCPServer-->>Client: MCP Handshake (Ack)
+    Client->>+MCPServer: MCP Handshake (Initialize)
+    MCPServer-->>-Client: MCP Handshake (Ack)
 
-    Client->>MCPServer: list_tools()
-    MCPServer-->>Client: Tools list
+    Client->>+MCPServer: list_tools()
+    MCPServer-->>-Client: Tools list
 
-    Client->>MCPServer: list_resources()
-    MCPServer-->>Client: Resources list
+    Client->>+MCPServer: list_resources()
+    MCPServer-->>-Client: Resources list
 
     Client->>-User: Print available tools and resources
 ```
@@ -437,14 +410,6 @@ Our first demo showcases a comprehensive MCP server that provides stock market d
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TB
     %% Main Server
     Server[FastMCP Stock Server<br/>simple_stock_server.py]
@@ -453,13 +418,13 @@ graph TB
     MockData[(MOCK_STOCK_DATA<br/>AAPL, MSFT, GOOGL<br/>AMZN, TSLA, META, NVDA)]
     
     %% Resources
-    subgraph Resources["📊 MCP Resources"]
+    subgraph Resources ["MCP Resources"]
         StockResource["stock://{symbol}<br/>Current Price Data"]
         TickersResource["stock://tickers<br/>Available Tickers List"]
     end
     
     %% Tools
-    subgraph Tools["🔧 MCP Tools"]
+    subgraph Tools ["MCP Tools"]
         GetPrice["get_stock_price(symbol)<br/>→ float"]
         GetHistory["get_stock_history(symbol, period)<br/>→ CSV string"]
         CompareStocks["compare_stock_prices(symbol1, symbol2)<br/>→ comparison string"]
@@ -468,19 +433,19 @@ graph TB
     end
     
     %% Prompts
-    subgraph Prompts["💬 MCP Prompts"]
+    subgraph Prompts ["MCP Prompts"]
         StockAnalysis["stock_analysis_prompt(symbol, period)<br/>→ Analysis prompt for AI"]
     end
     
     %% Helper Functions
-    subgraph Helpers["⚙️ Helper Functions"]
+    subgraph Helpers ["Helper Functions"]
         GenHistorical["generate_mock_historical_data()<br/>→ pandas DataFrame"]
         GetPerformance["get_performance_summary()<br/>→ performance string"]
-        HumanizeNumber["_humanize_number()<br/>→ formatted numbers"]
+        HumanizeNumber["_humanize_number()<br/>-&gt; formatted numbers"]
     end
     
     %% Schemas
-    subgraph Schemas["📋 Pydantic Schemas"]
+    subgraph Schemas ["Pydantic Schemas"]
         WeekRangeSchema["WeekRangePreference<br/>include_week_range: bool"]
     end
     
@@ -511,26 +476,7 @@ graph TB
     HeadlineSampling -->|sampling request| AIModel
     
     %% Resource dependencies
-    StockResource --> GetPrice
-    
-    %% Styling
-    classDef serverClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef dataClass fill:#faf5ff,stroke:#7c3aed,stroke-width:2px
-    classDef toolClass fill:#ecfdf5,stroke:#10b981,stroke-width:2px
-    classDef resourceClass fill:#fff7ed,stroke:#fb923c,stroke-width:2px
-    classDef promptClass fill:#fdf2f8,stroke:#ec4899,stroke-width:2px
-    classDef helperClass fill:#f1f5f9,stroke:#64748b,stroke-width:2px
-    classDef schemaClass fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-    classDef externalClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    
-    class Server serverClass
-    class MockData dataClass
-    class GetPrice,GetHistory,CompareStocks,GetTickerInfo,HeadlineSampling toolClass
-    class StockResource,TickersResource resourceClass
-    class StockAnalysis promptClass
-    class GenHistorical,GetPerformance,HumanizeNumber helperClass
-    class WeekRangeSchema schemaClass
-    class Client,AIModel externalClass
+    StockResource --> GetPrice    
 ```
 
 ### Key Features Demonstrated
@@ -602,21 +548,13 @@ Our second demo shows how to implement OAuth support with Azure Entra ID, demons
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TD
     %% External Systems
     Client[Client Application]
     EntraID[Microsoft Entra ID<br/>OAuth Provider]
     
     %% Main Application Components
-    subgraph "OAuth Weather Server"
+    subgraph OAuth_Weather_Server ["OAuth Weather Server"]
         direction TB
         
         %% FastMCP Framework
@@ -658,20 +596,7 @@ graph TD
     
     %% Configuration
     Config -.->|Configure| AuthSettings
-    Config -.->|Configure| EntraIdTokenVerifier
-    
-    %% Styling
-    classDef external fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef server fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef auth fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
-    classDef tool fill:#ecfdf5,stroke:#10b981,stroke-width:2px
-    classDef config fill:#f1f5f9,stroke:#64748b,stroke-width:2px
-
-    class Client,EntraID,JWKSEndpoint external
-    class FastMCP server
-    class EntraIdTokenVerifier,AuthSettings,JWKS auth
-    class WeatherTool,WellKnown tool
-    class Config config
+    Config -.->|Configure| EntraIdTokenVerifier    
 ```
 
 ### Security Features
@@ -760,14 +685,6 @@ Refer to [Expose REST API in API Management as an MCP server](https://learn.micr
 #### 2. APIM as Auth Gateway for MCP Servers
 In this pattern, APIM acts as an authorization server (AS), implementing dynamic client registration while delegating the underlying authentication and authorization to Microsoft Entra ID.
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TD
     %% MCP Clients
     subgraph MCPClients["MCP Clients"]
@@ -778,42 +695,30 @@ graph TD
     %% AI Gateway
     subgraph Gateway["AI Gateway"]
         subgraph APIM["Azure API Management<br/>Remote MCP Proxy"]
-            SSE["🛡️ MCP Endpoint /sse"]
-            MSG["🛡️ MCP Endpoint /message"]
-            OAuth["🛡️ OAuth"]
+            SSE["MCP Endpoint /sse"]
+            MSG["MCP Endpoint /message"]
+            OAuth["OAuth"]
         end
     end
 
     %% MCP Server
     subgraph MCPServer["MCP Server"]
         subgraph AzFunc["Azure Function"]
-            Tool1["🔧 MCP Tool"]
-            Tool2["🔧 MCP Tool"]
-            Tool3["🔧 MCP Tool"]
+            Tool1["MCP Tool"]
+            Tool2["MCP Tool"]
+            Tool3["MCP Tool"]
         end
     end
 
     %% Microsoft Entra ID
-    EntraID["Microsoft Entra ID<br/>💎"]
+    EntraID["Microsoft Entra ID"]
 
     %% Connections
     MCPClients <-->|MCP Protocol| APIM
-    APIM <-->|🛡️ Secured Connection| AzFunc
+    APIM <-->|Secured Connection| AzFunc
     Gateway <--> EntraID
-    MCPClients -.->|🔐 Login / Consent| EntraID
+    MCPClients -.->|Login / Consent| EntraID
 
-    %% Styling
-    classDef clientBox fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef gatewayBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
-    classDef serverBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
-    classDef authBox fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
-    classDef toolBox fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px
-
-    class MCPClients clientBox
-    class Gateway,APIM gatewayBox
-    class MCPServer,AzFunc serverBox
-    class EntraID authBox
-    class Tool1,Tool2,Tool3 toolBox
 ```
 
 #### 3. MCP Servers authorization with Protected Resource Metadata (PRM) 
