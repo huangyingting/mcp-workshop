@@ -55,6 +55,10 @@
             "headers": {
                 "x-functions-key": "${input:functions-mcp-extension-system-key}"
             }
+        },
+        "icsu_logic_app": {
+            "url": "https://icsulogicapp.azurewebsites.net/api/mcp",
+            "type": "http"
         }
     }
 }

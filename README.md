@@ -14,17 +14,18 @@
 9. [Demo 4: Secure Access to MCP Servers in Azure APIM](#demo-4-secure-access-to-mcp-servers-in-azure-apim)
 10. [Demo 5: MCP with Azure AI Foundry](#demo-5-mcp-with-azure-ai-foundry)
 11. [Demo 6: MCP Bindings for Azure Functions](#demo-6-mcp-bindings-for-azure-functions)
-12. [Demo 7: Extend Copilot Studio Agent Using MCP](#demo-7-extend-copilot-studio-agent-using-mcp)
-13. [Demo 8: Private and Enterprise-Ready MCP Registry](#demo-8-private-and-enterprise-ready-mcp-registry)
-14. [Security Risks in MCP](#security-risks-in-mcp)
-15. [Demo 9: XPIA Attacks in MCP](#demo-9-xpia-attacks-in-mcp)
-16. [Demo 10: Remote Code Execution (RCE) in MCP](#demo-10-remote-code-execution-rce-in-mcp)
-17. [Demo 11: MCP Tool Poisoning](#demo-11-mcp-tool-poisoning)
-18. [Demo 12: MCP Tool Shadowing](#demo-12-mcp-tool-shadowing)
-19. [Hands-on Exercises](#hands-on-exercises)
-20. [Key Takeaways](#key-takeaways)
-21. [Resources](#resources)
-22. [Next Steps](#next-steps)
+12. [Demo 7: Logic Apps Connectors as MCP Servers using Azure API Center](#demo-7-logic-apps-connectors-as-mcp-servers-using-azure-api-center)
+13. [Demo 8: Extend Copilot Studio Agent Using MCP](#demo-8-extend-copilot-studio-agent-using-mcp)
+14. [Demo 9: Private and Enterprise-Ready MCP Registry](#demo-9-private-and-enterprise-ready-mcp-registry)
+15. [Security Risks in MCP](#security-risks-in-mcp)
+16. [Demo 10: XPIA Attacks in MCP](#demo-10-xpia-attacks-in-mcp)
+17. [Demo 11: Remote Code Execution (RCE) in MCP](#demo-11-remote-code-execution-rce-in-mcp)
+18. [Demo 12: MCP Tool Poisoning](#demo-12-mcp-tool-poisoning)
+19. [Demo 13: MCP Tool Shadowing](#demo-13-mcp-tool-shadowing)
+20. [Hands-on Exercises](#hands-on-exercises)
+21. [Key Takeaways](#key-takeaways)
+22. [Resources](#resources)
+23. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -826,7 +827,19 @@ To avoid charges, remove resources when done:
 azd down
 ```
 
-## Demo 7: Extend Copilot Studio Agent Using MCP
+## Demo 7: Logic Apps Connectors as MCP Servers using Azure API Center
+Setting up Logic Apps as MCP servers lets you reuse existing workflows and tap into over 1,400 connectors—so your AI agents can securely interact with enterprise systems without reinventing the wheel. You also get flexible deployment options, built-in security with OAuth 2.0, and full monitoring support to keep everything compliant and traceable.
+
+For more information, see:
+[Introducing Logic Apps MCP servers (Public Preview)](https://techcommunity.microsoft.com/blog/integrationsonazureblog/introducing-logic-apps-mcp-servers-public-preview/4450419)
+[Set up Standard logic apps as remote MCP servers (Preview)](https://learn.microsoft.com/en-us/azure/logic-apps/set-up-model-context-protocol-server-standard)
+
+To demonstrate Logic Apps as MCP servers, we have a sample Logic App that retrieves pages from Confluence Cloud based on a given Cloud ID.
+1. Launch the `icsu_logic_app` from `.vscode/mcp.json` by clicking the `Start` link. Login to Azure if prompted.
+2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: icsu_logic_app` tool.
+3. Ask the agent questions like, `Retrieve all pages associated with Cloud ID 09ed35c8-a2fb-49a0-82a0-82e2a2fbe63d.`
+
+## Demo 8: Extend Copilot Studio Agent Using MCP
 Using Copilot Studio, you can extend your agent with:
 
 - MCP connectors (prebuilt MCP servers): Connect to Microsoft services such as Dataverse, Dynamics 365, and Fabric.
@@ -870,7 +883,7 @@ Then follow these steps:
 
 The new MCP connector will appear under Model Context Protocol when you click `Add a tool` in Copilot Studio. Add it and try a prompt such as: "Today's sports news in the United States."
 
-## Demo 8: Private and Enterprise-Ready MCP Registry
+## Demo 9: Private and Enterprise-Ready MCP Registry
 Using Azure API Center as a private MCP registry streamlines enterprise-wide discovery, cataloging, and governance of Model Context Protocol assets.
 
 Sample private registry: [MCP Center](https://mcp.azure.com/)
@@ -925,7 +938,7 @@ By enabling tool invocation and data access, MCP introduces new security challen
 4. Establish proper sandboxing and isolation mechanisms
 5. Implement continuous monitoring tailored to MCP environments
 
-## Demo 9: XPIA Attacks in MCP
+## Demo 10: XPIA Attacks in MCP
 An XPIA (indirect prompt injection) attack embeds malicious instructions within external content (for example, a web page, document, or email). When a generative AI system ingests that content, it may execute the hidden instructions as if they were legitimate user commands, leading to issues such as data exfiltration, unsafe output, or manipulation of future responses.
 
 The notebook [xpia.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/xpia.ipynb) demonstrates XPIA attacks in MCP. To run the demo, start the MCP server first:
@@ -936,7 +949,7 @@ uv run xpia.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 10: Remote Code Execution (RCE) in MCP
+## Demo 11: Remote Code Execution (RCE) in MCP
 MCP is a context‑exchange protocol, but insecure integrations can open Remote Code Execution (RCE) paths.
 
 The notebook [rce.ipynb](hhttps://github.com/huangyingting/mcp-workshop/blob/main/risks/rce.ipynb) demonstrates RCE attacks in MCP. To run the demo, start the MCP server first:
@@ -947,7 +960,7 @@ uv run rce.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 11: MCP Tool Poisoning
+## Demo 12: MCP Tool Poisoning
 MCP tool poisoning is a cybersecurity vulnerability where attackers embed malicious instructions within the descriptions of tools offered via the MCP. These instructions are often hidden from the user but are processed by the AI model. The AI is tricked into performing unauthorized actions, such as exfiltrating sensitive data or hijacking the AI's behavior.
 
 The notebook [tool_poisoning.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/tool_poisoning.ipynb) demonstrates tool poisoning attacks in MCP. To run the demo, start the MCP server first:
@@ -958,7 +971,7 @@ uv run tool_poisoning.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 12: MCP Tool Shadowing
+## Demo 13: MCP Tool Shadowing
 MCP tool shadowing is a type of tool poisoning where a malicious MCP tool's description contains hidden instructions that secretly alter the behavior of a separate, trusted tool from a different server. The AI model, processing all available tool descriptions, is tricked into applying these malicious instructions when the trusted tool is used, even if the malicious tool itself isn't directly invoked for that specific task. This can lead to actions like data exfiltration or unauthorized operations, all while the user believes they are interacting safely with the trusted tool.
 
 The notebook [tool_shadowing.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/tool_shadowing.ipynb) demonstrates tool shadowing attacks in MCP. To run the demo, start the MCP server first:
