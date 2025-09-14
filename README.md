@@ -14,17 +14,18 @@
 9. [Demo 4: Secure Access to MCP Servers in Azure APIM](#demo-4-secure-access-to-mcp-servers-in-azure-apim)
 10. [Demo 5: MCP with Azure AI Foundry](#demo-5-mcp-with-azure-ai-foundry)
 11. [Demo 6: MCP Bindings for Azure Functions](#demo-6-mcp-bindings-for-azure-functions)
-12. [Demo 7: Extend Copilot Studio Agent Using MCP](#demo-7-extend-copilot-studio-agent-using-mcp)
-13. [Demo 8: Private and Enterprise-Ready MCP Registry](#demo-8-private-and-enterprise-ready-mcp-registry)
-14. [Security Risks in MCP](#security-risks-in-mcp)
-15. [Demo 9: XPIA Attacks in MCP](#demo-9-xpia-attacks-in-mcp)
-16. [Demo 10: Remote Code Execution (RCE) in MCP](#demo-10-remote-code-execution-rce-in-mcp)
-17. [Demo 11: MCP Tool Poisoning](#demo-11-mcp-tool-poisoning)
-18. [Demo 12: MCP Tool Shadowing](#demo-12-mcp-tool-shadowing)
-19. [Hands-on Exercises](#hands-on-exercises)
-20. [Key Takeaways](#key-takeaways)
-21. [Resources](#resources)
-22. [Next Steps](#next-steps)
+12. [Demo 7: Logic Apps Connectors as MCP Servers using Azure API Center](#demo-7-logic-apps-connectors-as-mcp-servers-using-azure-api-center)
+13. [Demo 8: Extend Copilot Studio Agent Using MCP](#demo-8-extend-copilot-studio-agent-using-mcp)
+14. [Demo 9: Private and Enterprise-Ready MCP Registry](#demo-9-private-and-enterprise-ready-mcp-registry)
+15. [Security Risks in MCP](#security-risks-in-mcp)
+16. [Demo 10: XPIA Attacks in MCP](#demo-10-xpia-attacks-in-mcp)
+17. [Demo 11: Remote Code Execution (RCE) in MCP](#demo-11-remote-code-execution-rce-in-mcp)
+18. [Demo 12: MCP Tool Poisoning](#demo-12-mcp-tool-poisoning)
+19. [Demo 13: MCP Tool Shadowing](#demo-13-mcp-tool-shadowing)
+20. [Hands-on Exercises](#hands-on-exercises)
+21. [Key Takeaways](#key-takeaways)
+22. [Resources](#resources)
+23. [Next Steps](#next-steps)
 
 ## Introduction to MCP
 
@@ -182,14 +183,6 @@ The workshop includes a comprehensive console client (`clients/console_client.py
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TB
     subgraph "Initialization"
         Start([Start]) --> ParseArgs[Parse Command Line Arguments]
@@ -248,11 +241,6 @@ graph TB
     ConnectStdio -.-> StdioTransport
     ConnectSSE -.-> SSETransport
     ConnectHTTP -.-> HTTPTransport
-    
-    style Start fill:#86efac,stroke:#059669,stroke-width:2px
-    style Cleanup fill:#fecaca,stroke:#ef4444,stroke-width:2px
-    style CallOpenAI fill:#bfdbfe,stroke:#3b82f6,stroke-width:2px
-    style CallMCPTool fill:#e9d5ff,stroke:#a855f7,stroke-width:2px
 ```
 
 ### Execution Flow
@@ -326,20 +314,6 @@ The workshop also includes an EntraID client (`clients/entraid_client.py`) that 
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b',
-  'actorBkg': '#e6f3ff',
-  'actorBorderColor': '#0066cc',
-  'signalColor': '#64748b',
-  'signalTextColor': '#0f172a',
-  'noteBkgColor': '#f8fafc',
-  'noteTextColor': '#0f172a'
-}}}%%
 sequenceDiagram
     participant User
     participant Client as MCP Client
@@ -349,41 +323,41 @@ sequenceDiagram
     User->>+Client: Run script
 
     Note over Client: Creates EntraIDDeviceCodeAuth instance
-    Client->>MCPServer: Initial API Request (no auth token)
-    MCPServer-->>Client: 401 Unauthorized with WWW-Authenticate header
+    Client->>+MCPServer: Initial API Request (no auth token)
+    MCPServer-->>-Client: 401 Unauthorized with WWW-Authenticate header
 
     Client->>Client: Discover protected resource metadata URL from header
     alt Metadata URL not in header
-        Client->>MCPServer: GET /.well-known/oauth-protected-resource
-        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+        Client->>+MCPServer: GET /.well-known/oauth-protected-resource
+        MCPServer-->>-Client: Return resource metadata (auth server, scopes)
     else Metadata URL present
-        Client->>MCPServer: GET metadata from URL
-        MCPServer-->>Client: Return resource metadata (auth server, scopes)
+        Client->>+MCPServer: GET metadata from URL
+        MCPServer-->>-Client: Return resource metadata (auth server, scopes)
     end
 
     Note over Client: Initializes MSAL PublicClientApplication
-    Client->>EntraID: Initiate Device Code Flow
-    EntraID-->>Client: Device Code & User Verification URL
+    Client->>+EntraID: Initiate Device Code Flow
+    EntraID-->>-Client: Device Code & User Verification URL
 
     Client->>User: Display verification URL and code
-    User->>EntraID: Authenticates in browser
+    User->>+EntraID: Authenticates in browser
     
-    Client->>EntraID: Poll for token with device code
-    EntraID-->>Client: Access Token
+    Client->>+EntraID: Poll for token with device code
+    EntraID-->>-Client: Access Token
 
     Note over Client: Store token and prepare authed request
-    Client->>MCPServer: Retry API Request with Bearer Token
-    MCPServer-->>Client: 200 OK
+    Client->>+MCPServer: Retry API Request with Bearer Token
+    MCPServer-->>-Client: 200 OK
 
     Note over Client: Establish MCP Session
-    Client->>MCPServer: MCP Handshake (Initialize)
-    MCPServer-->>Client: MCP Handshake (Ack)
+    Client->>+MCPServer: MCP Handshake (Initialize)
+    MCPServer-->>-Client: MCP Handshake (Ack)
 
-    Client->>MCPServer: list_tools()
-    MCPServer-->>Client: Tools list
+    Client->>+MCPServer: list_tools()
+    MCPServer-->>-Client: Tools list
 
-    Client->>MCPServer: list_resources()
-    MCPServer-->>Client: Resources list
+    Client->>+MCPServer: list_resources()
+    MCPServer-->>-Client: Resources list
 
     Client->>-User: Print available tools and resources
 ```
@@ -437,14 +411,6 @@ Our first demo showcases a comprehensive MCP server that provides stock market d
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TB
     %% Main Server
     Server[FastMCP Stock Server<br/>simple_stock_server.py]
@@ -453,13 +419,13 @@ graph TB
     MockData[(MOCK_STOCK_DATA<br/>AAPL, MSFT, GOOGL<br/>AMZN, TSLA, META, NVDA)]
     
     %% Resources
-    subgraph Resources["📊 MCP Resources"]
+    subgraph Resources ["MCP Resources"]
         StockResource["stock://{symbol}<br/>Current Price Data"]
         TickersResource["stock://tickers<br/>Available Tickers List"]
     end
     
     %% Tools
-    subgraph Tools["🔧 MCP Tools"]
+    subgraph Tools ["MCP Tools"]
         GetPrice["get_stock_price(symbol)<br/>→ float"]
         GetHistory["get_stock_history(symbol, period)<br/>→ CSV string"]
         CompareStocks["compare_stock_prices(symbol1, symbol2)<br/>→ comparison string"]
@@ -468,19 +434,19 @@ graph TB
     end
     
     %% Prompts
-    subgraph Prompts["💬 MCP Prompts"]
+    subgraph Prompts ["MCP Prompts"]
         StockAnalysis["stock_analysis_prompt(symbol, period)<br/>→ Analysis prompt for AI"]
     end
     
     %% Helper Functions
-    subgraph Helpers["⚙️ Helper Functions"]
+    subgraph Helpers ["Helper Functions"]
         GenHistorical["generate_mock_historical_data()<br/>→ pandas DataFrame"]
         GetPerformance["get_performance_summary()<br/>→ performance string"]
-        HumanizeNumber["_humanize_number()<br/>→ formatted numbers"]
+        HumanizeNumber["_humanize_number()<br/>-&gt; formatted numbers"]
     end
     
     %% Schemas
-    subgraph Schemas["📋 Pydantic Schemas"]
+    subgraph Schemas ["Pydantic Schemas"]
         WeekRangeSchema["WeekRangePreference<br/>include_week_range: bool"]
     end
     
@@ -511,26 +477,7 @@ graph TB
     HeadlineSampling -->|sampling request| AIModel
     
     %% Resource dependencies
-    StockResource --> GetPrice
-    
-    %% Styling
-    classDef serverClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef dataClass fill:#faf5ff,stroke:#7c3aed,stroke-width:2px
-    classDef toolClass fill:#ecfdf5,stroke:#10b981,stroke-width:2px
-    classDef resourceClass fill:#fff7ed,stroke:#fb923c,stroke-width:2px
-    classDef promptClass fill:#fdf2f8,stroke:#ec4899,stroke-width:2px
-    classDef helperClass fill:#f1f5f9,stroke:#64748b,stroke-width:2px
-    classDef schemaClass fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-    classDef externalClass fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    
-    class Server serverClass
-    class MockData dataClass
-    class GetPrice,GetHistory,CompareStocks,GetTickerInfo,HeadlineSampling toolClass
-    class StockResource,TickersResource resourceClass
-    class StockAnalysis promptClass
-    class GenHistorical,GetPerformance,HumanizeNumber helperClass
-    class WeekRangeSchema schemaClass
-    class Client,AIModel externalClass
+    StockResource --> GetPrice    
 ```
 
 ### Key Features Demonstrated
@@ -602,21 +549,13 @@ Our second demo shows how to implement OAuth support with Azure Entra ID, demons
 
 ### Architecture
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TD
     %% External Systems
     Client[Client Application]
     EntraID[Microsoft Entra ID<br/>OAuth Provider]
     
     %% Main Application Components
-    subgraph "OAuth Weather Server"
+    subgraph OAuth_Weather_Server ["OAuth Weather Server"]
         direction TB
         
         %% FastMCP Framework
@@ -658,20 +597,7 @@ graph TD
     
     %% Configuration
     Config -.->|Configure| AuthSettings
-    Config -.->|Configure| EntraIdTokenVerifier
-    
-    %% Styling
-    classDef external fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef server fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef auth fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
-    classDef tool fill:#ecfdf5,stroke:#10b981,stroke-width:2px
-    classDef config fill:#f1f5f9,stroke:#64748b,stroke-width:2px
-
-    class Client,EntraID,JWKSEndpoint external
-    class FastMCP server
-    class EntraIdTokenVerifier,AuthSettings,JWKS auth
-    class WeatherTool,WellKnown tool
-    class Config config
+    Config -.->|Configure| EntraIdTokenVerifier    
 ```
 
 ### Security Features
@@ -760,14 +686,6 @@ Refer to [Expose REST API in API Management as an MCP server](https://learn.micr
 #### 2. APIM as Auth Gateway for MCP Servers
 In this pattern, APIM acts as an authorization server (AS), implementing dynamic client registration while delegating the underlying authentication and authorization to Microsoft Entra ID.
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {
-  'fontFamily': 'Inter,Segoe UI,Arial,sans-serif',
-  'primaryColor': '#e6f3ff',
-  'primaryBorderColor': '#0066cc',
-  'primaryTextColor': '#0f172a',
-  'tertiaryColor': '#f8fafc',
-  'lineColor': '#64748b'
-}}}%%
 graph TD
     %% MCP Clients
     subgraph MCPClients["MCP Clients"]
@@ -778,42 +696,30 @@ graph TD
     %% AI Gateway
     subgraph Gateway["AI Gateway"]
         subgraph APIM["Azure API Management<br/>Remote MCP Proxy"]
-            SSE["🛡️ MCP Endpoint /sse"]
-            MSG["🛡️ MCP Endpoint /message"]
-            OAuth["🛡️ OAuth"]
+            SSE["MCP Endpoint /sse"]
+            MSG["MCP Endpoint /message"]
+            OAuth["OAuth"]
         end
     end
 
     %% MCP Server
     subgraph MCPServer["MCP Server"]
         subgraph AzFunc["Azure Function"]
-            Tool1["🔧 MCP Tool"]
-            Tool2["🔧 MCP Tool"]
-            Tool3["🔧 MCP Tool"]
+            Tool1["MCP Tool"]
+            Tool2["MCP Tool"]
+            Tool3["MCP Tool"]
         end
     end
 
     %% Microsoft Entra ID
-    EntraID["Microsoft Entra ID<br/>💎"]
+    EntraID["Microsoft Entra ID"]
 
     %% Connections
     MCPClients <-->|MCP Protocol| APIM
-    APIM <-->|🛡️ Secured Connection| AzFunc
+    APIM <-->|Secured Connection| AzFunc
     Gateway <--> EntraID
-    MCPClients -.->|🔐 Login / Consent| EntraID
+    MCPClients -.->|Login / Consent| EntraID
 
-    %% Styling
-    classDef clientBox fill:#e6f3ff,stroke:#0066cc,stroke-width:2px
-    classDef gatewayBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
-    classDef serverBox fill:#eef2ff,stroke:#6366f1,stroke-width:2px
-    classDef authBox fill:#fff7ed,stroke:#f59e0b,stroke-width:2px
-    classDef toolBox fill:#ecfdf5,stroke:#10b981,stroke-width:1.5px
-
-    class MCPClients clientBox
-    class Gateway,APIM gatewayBox
-    class MCPServer,AzFunc serverBox
-    class EntraID authBox
-    class Tool1,Tool2,Tool3 toolBox
 ```
 
 #### 3. MCP Servers authorization with Protected Resource Metadata (PRM) 
@@ -921,7 +827,31 @@ To avoid charges, remove resources when done:
 azd down
 ```
 
-## Demo 7: Extend Copilot Studio Agent Using MCP
+## Demo 7: Logic Apps Connectors as MCP Servers using Azure API Center
+Setting up Logic Apps as MCP servers lets you reuse existing workflows and tap into over 1,400 connectors—so your AI agents can securely interact with enterprise systems without reinventing the wheel. You also get flexible deployment options, built-in security with OAuth 2.0, and full monitoring support to keep everything compliant and traceable.
+
+For more information, see:
+[Introducing Logic Apps MCP servers (Public Preview)](https://techcommunity.microsoft.com/blog/integrationsonazureblog/introducing-logic-apps-mcp-servers-public-preview/4450419)
+[Set up Standard logic apps as remote MCP servers (Preview)](https://learn.microsoft.com/en-us/azure/logic-apps/set-up-model-context-protocol-server-standard)
+
+To demonstrate Logic Apps as MCP servers:
+
+1. Create a Logic App (Standard) using the Workflow Standard plan.
+2. Create an Azure API Center resource (Free tier is fine).
+3. In API Center: Discovery > MCP (preview) > Azure Logic Apps > Register.
+4. Complete the registration wizard: select the Logic App you created and choose the workflows/connectors you want exposed.
+5. In the Logic App: Settings > Authentication.
+   - Select the Microsoft identity provider and click Edit.
+   - Under Allowed client applications add: aebc6443-996d-45c2-90f0-388ff96faa56 (Visual Studio Code).
+6. Save changes. The Logic App is now discoverable and usable as an MCP server via API Center.
+7. Add an MCP server entry to `.vscode/mcp.json` pointing to your Logic App MCP endpoint, e.g. `https://<logic-app-name>.azurewebsites.net/api/mcp`.
+8. Launch it from `.vscode/mcp.json` by clicking Start. Sign in to Azure if prompted.
+9. In GitHub Copilot Chat, switch to Agent mode and select the MCP Server `<your_logic_app_mcp>`.
+10. Ask the agent questions related to the exposed connector, for example:
+    - Retrieve all todo tasks from the Jira Cloud instance "geticsu". (Jira connector)
+    - Retrieve all pages for Cloud ID `09ed35c8-a2fb-49a0-82a0-82e2a2fbe63d`. (Confluence connector)
+
+## Demo 8: Extend Copilot Studio Agent Using MCP
 Using Copilot Studio, you can extend your agent with:
 
 - MCP connectors (prebuilt MCP servers): Connect to Microsoft services such as Dataverse, Dynamics 365, and Fabric.
@@ -965,7 +895,7 @@ Then follow these steps:
 
 The new MCP connector will appear under Model Context Protocol when you click `Add a tool` in Copilot Studio. Add it and try a prompt such as: "Today's sports news in the United States."
 
-## Demo 8: Private and Enterprise-Ready MCP Registry
+## Demo 9: Private and Enterprise-Ready MCP Registry
 Using Azure API Center as a private MCP registry streamlines enterprise-wide discovery, cataloging, and governance of Model Context Protocol assets.
 
 Sample private registry: [MCP Center](https://mcp.azure.com/)
@@ -1020,7 +950,7 @@ By enabling tool invocation and data access, MCP introduces new security challen
 4. Establish proper sandboxing and isolation mechanisms
 5. Implement continuous monitoring tailored to MCP environments
 
-## Demo 9: XPIA Attacks in MCP
+## Demo 10: XPIA Attacks in MCP
 An XPIA (indirect prompt injection) attack embeds malicious instructions within external content (for example, a web page, document, or email). When a generative AI system ingests that content, it may execute the hidden instructions as if they were legitimate user commands, leading to issues such as data exfiltration, unsafe output, or manipulation of future responses.
 
 The notebook [xpia.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/xpia.ipynb) demonstrates XPIA attacks in MCP. To run the demo, start the MCP server first:
@@ -1031,7 +961,7 @@ uv run xpia.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 10: Remote Code Execution (RCE) in MCP
+## Demo 11: Remote Code Execution (RCE) in MCP
 MCP is a context‑exchange protocol, but insecure integrations can open Remote Code Execution (RCE) paths.
 
 The notebook [rce.ipynb](hhttps://github.com/huangyingting/mcp-workshop/blob/main/risks/rce.ipynb) demonstrates RCE attacks in MCP. To run the demo, start the MCP server first:
@@ -1042,7 +972,7 @@ uv run rce.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 11: MCP Tool Poisoning
+## Demo 12: MCP Tool Poisoning
 MCP tool poisoning is a cybersecurity vulnerability where attackers embed malicious instructions within the descriptions of tools offered via the MCP. These instructions are often hidden from the user but are processed by the AI model. The AI is tricked into performing unauthorized actions, such as exfiltrating sensitive data or hijacking the AI's behavior.
 
 The notebook [tool_poisoning.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/tool_poisoning.ipynb) demonstrates tool poisoning attacks in MCP. To run the demo, start the MCP server first:
@@ -1053,7 +983,7 @@ uv run tool_poisoning.py -t streamable-http
 ```
 Then follow the instructions in the notebook.
 
-## Demo 12: MCP Tool Shadowing
+## Demo 13: MCP Tool Shadowing
 MCP tool shadowing is a type of tool poisoning where a malicious MCP tool's description contains hidden instructions that secretly alter the behavior of a separate, trusted tool from a different server. The AI model, processing all available tool descriptions, is tricked into applying these malicious instructions when the trusted tool is used, even if the malicious tool itself isn't directly invoked for that specific task. This can lead to actions like data exfiltration or unauthorized operations, all while the user believes they are interacting safely with the trusted tool.
 
 The notebook [tool_shadowing.ipynb](https://github.com/huangyingting/mcp-workshop/blob/main/risks/tool_shadowing.ipynb) demonstrates tool shadowing attacks in MCP. To run the demo, start the MCP server first:
