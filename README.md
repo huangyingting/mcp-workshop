@@ -834,10 +834,22 @@ For more information, see:
 [Introducing Logic Apps MCP servers (Public Preview)](https://techcommunity.microsoft.com/blog/integrationsonazureblog/introducing-logic-apps-mcp-servers-public-preview/4450419)
 [Set up Standard logic apps as remote MCP servers (Preview)](https://learn.microsoft.com/en-us/azure/logic-apps/set-up-model-context-protocol-server-standard)
 
-To demonstrate Logic Apps as MCP servers, we have a sample Logic App that retrieves pages from Confluence Cloud based on a given Cloud ID.
-1. Launch the `icsu_logic_app` from `.vscode/mcp.json` by clicking the `Start` link. Login to Azure if prompted.
-2. In GitHub Copilot Chat, switch to `Agent` mode and select the `MCP Server: icsu_logic_app` tool.
-3. Ask the agent questions like, `Retrieve all pages associated with Cloud ID 09ed35c8-a2fb-49a0-82a0-82e2a2fbe63d.`
+To demonstrate Logic Apps as MCP servers:
+
+1. Create a Logic App (Standard) using the Workflow Standard plan.
+2. Create an Azure API Center resource (Free tier is fine).
+3. In API Center: Discovery > MCP (preview) > Azure Logic Apps > Register.
+4. Complete the registration wizard: select the Logic App you created and choose the workflows/connectors you want exposed.
+5. In the Logic App: Settings > Authentication.
+   - Select the Microsoft identity provider and click Edit.
+   - Under Allowed client applications add: aebc6443-996d-45c2-90f0-388ff96faa56 (Visual Studio Code).
+6. Save changes. The Logic App is now discoverable and usable as an MCP server via API Center.
+7. Add an MCP server entry to `.vscode/mcp.json` pointing to your Logic App MCP endpoint, e.g. `https://<logic-app-name>.azurewebsites.net/api/mcp`.
+8. Launch it from `.vscode/mcp.json` by clicking Start. Sign in to Azure if prompted.
+9. In GitHub Copilot Chat, switch to Agent mode and select the MCP Server `<your_logic_app_mcp>`.
+10. Ask the agent questions related to the exposed connector, for example:
+    - Retrieve all todo tasks from the Jira Cloud instance "geticsu". (Jira connector)
+    - Retrieve all pages for Cloud ID `09ed35c8-a2fb-49a0-82a0-82e2a2fbe63d`. (Confluence connector)
 
 ## Demo 8: Extend Copilot Studio Agent Using MCP
 Using Copilot Studio, you can extend your agent with:
