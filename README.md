@@ -107,6 +107,7 @@ The latest MCP spec (2025-06-18) supports OAuth 2.1 for secure access to protect
 | **Dynamic Client Registration (RFC 7591)** | MCP clients can register dynamically with the authorization server. |
 | **Protected Resource Metadata (RFC 9728)** | MCP servers publish metadata about protected resources to guide client authorization. |
 | **Resource Indicators (RFC 8707)** | Clients specify the intended audience for tokens, preventing misuse across services. |
+
 ## Workshop Setup
 
 ### Prerequisites
@@ -136,6 +137,15 @@ Create and deploy an Azure OpenAI in Azure AI Foundry, refer to [here](https://l
 
 ### Entra ID configuration
 To enable OAuth support for MCP, two applications must be registered in Entra ID: one representing the MCP client, and the other representing the MCP server.
+
+A script is provided to automate the registration process. To use it, run:
+```bash
+chmod +x prepare.sh
+./prepare.sh
+```
+This script will automatically create both Entra ID applications and generate separate .env files for the MCP client and server.
+
+If you prefer to register the applications manually, follow these steps:
 
 #### MCP Client Application Registration
 1. From Azure portal **Microsoft Entra ID->Manage->App Registration->New registration**, register a MCP client application.
